@@ -15,6 +15,7 @@ app.use("/api/v1", IndexRoutes);
 // Basic route
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello,This Backend of Healix');
+  // console.log('Hello,This Backend of Healix');
 });
 
 app.use(globalErrorHandler);
