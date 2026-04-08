@@ -4,7 +4,7 @@ import { AuthRoutes } from "../module/auth/auth.route";
 import { UserRoute } from "../module/user/user.route";
 import { DoctorRoute } from "../module/doctor/doctor.route";
 import { AdminRoute } from "../module/admin/admin.route";
-import { SuperAdminRoute } from "../module/admin copy/superAdmin.route";
+import { SuperAdminRoute } from "../module/superAdmin/superAdmin.route";
 
 const router = Router();
 
