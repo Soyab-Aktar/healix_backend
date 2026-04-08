@@ -16,7 +16,31 @@ const createDoctor = catchAsync(
     })
   }
 )
+const createAdmin = catchAsync(
+  async (req: Request, res: Response) => {
+    const payload = req.body;
+    const result = await UserService.createAdmin(payload);
+    sendResponce(res, {
+      httpStatusCode: status.CREATED,
+      success: true,
+      message: "Admin Create Successfully",
+      data: result
+    })
+  }
+)
+const createSuperAdmin = catchAsync(
+  async (req: Request, res: Response) => {
+    const payload = req.body;
+    const result = await UserService.createSuperAdmin(payload);
+    sendResponce(res, {
+      httpStatusCode: status.CREATED,
+      success: true,
+      message: "Super Admin Create Successfully",
+      data: result
+    })
+  }
+)
 
 export const UserController = {
-  createDoctor,
+  createDoctor, createAdmin, createSuperAdmin,
 }

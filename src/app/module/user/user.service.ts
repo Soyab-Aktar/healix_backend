@@ -3,7 +3,7 @@ import { Role, Specialty } from "../../../generated/prisma/client";
 import AppError from "../../errorHelpers/AppError";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
-import { ICreateDoctorPayload } from "./user.interface";
+import { ICreateAdminPayload, ICreateDoctorPayload, ICreateSuperAdminPayload } from "./user.interface";
 
 const createDoctor = async (payload: ICreateDoctorPayload) => {
 
@@ -127,9 +127,171 @@ const createDoctor = async (payload: ICreateDoctorPayload) => {
 
 
 }
+const createAdmin = async (payload: ICreateAdminPayload) => {
+
+  //* Check User Exist or not
+  const userExist = await prisma.user.findUnique({
+    where: {
+      email: payload.admin.email,
+    }
+  })
+  if (userExist) {
+    throw new AppError(status.CONFLICT, "User already exist");
+  }
+
+  //* Create User
+  const userData = await auth.api.signUpEmail({
+    body: {
+      email: payload.admin.email,
+      password: payload.password,
+      role: Role.ADMIN,
+      name: payload.admin.name,
+      needPasswordChange: true,
+
+    }
+  })
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const adminData = await tx.admin.create({
+        data: {
+          userId: userData.user.id,
+          ...payload.admin,
+        }
+      })
+
+      const admin = await tx.admin.findUnique({
+        where: {
+          id: adminData.id
+        },
+        select: {
+          id: true,
+          userId: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          contactNumber: true,
+          createdAt: true,
+          updatedAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              status: true,
+              emailVerified: true,
+              createdAt: true,
+              updatedAt: true,
+              isDeleted: true,
+              deletedAt: true
+            }
+          }
+        }
+
+
+      })
+
+      return admin;
+    })
+
+    return result;
+
+  } catch (err) {
+    console.log("Transaction Error : ", err);
+    await prisma.user.delete({
+      where: {
+        id: userData.user.id,
+      }
+    })
+    throw new AppError(status.BAD_REQUEST, "Admin creation failed");
+  }
+
+
+}
+const createSuperAdmin = async (payload: ICreateSuperAdminPayload) => {
+
+  //* Check User Exist or not
+  const userExist = await prisma.user.findUnique({
+    where: {
+      email: payload.superAdmin.email,
+    }
+  })
+  if (userExist) {
+    throw new AppError(status.CONFLICT, "User already exist");
+  }
+
+  //* Create User
+  const userData = await auth.api.signUpEmail({
+    body: {
+      email: payload.superAdmin.email,
+      password: payload.password,
+      role: Role.SUPER_ADMIN,
+      name: payload.superAdmin.name,
+      needPasswordChange: true,
+
+    }
+  })
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const superAdminData = await tx.superAdmin.create({
+        data: {
+          userId: userData.user.id,
+          ...payload.superAdmin,
+        }
+      })
+
+      const superAdmin = await tx.superAdmin.findUnique({
+        where: {
+          id: superAdminData.id
+        },
+        select: {
+          id: true,
+          userId: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          contactNumber: true,
+          createdAt: true,
+          updatedAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              status: true,
+              emailVerified: true,
+              createdAt: true,
+              updatedAt: true,
+              isDeleted: true,
+              deletedAt: true
+            }
+          }
+        }
+
+
+      })
+
+      return superAdmin;
+    })
+
+    return result;
+
+  } catch (err) {
+    console.log("Transaction Error : ", err);
+    await prisma.user.delete({
+      where: {
+        id: userData.user.id,
+      }
+    })
+    throw new AppError(status.BAD_REQUEST, "SuperAdmin creation failed");
+  }
+
+
+}
 
 
 
 export const UserService = {
-  createDoctor,
+  createDoctor, createAdmin, createSuperAdmin
 }
