@@ -1,5 +1,6 @@
+
 export interface IUpdateDoctorPayload {
-  name: string;
+  name?: string;
   profilePhoto?: string;
   contactNumber?: string;
   address?: string;
@@ -9,4 +10,6 @@ export interface IUpdateDoctorPayload {
   qualification?: string;
   currentWorkingPlace?: string;
   designation?: string;
+  specialties?: string[];
 }
+
