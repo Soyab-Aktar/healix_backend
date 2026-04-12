@@ -2,6 +2,9 @@ import status from "http-status";
 import AppError from "../../errorHelpers/AppError";
 import { prisma } from "../../lib/prisma";
 import { IAdminUpdatePayload } from "./admin.interface";
+import { IRequestUser } from "../../interfaces/requestUser.interface";
+import { isAnyArrayBuffer } from "node:util/types";
+import { UserStatus } from "../../../generated/prisma/enums";
 
 const getAllAdmins = async () => {
   const result = await prisma.admin.findMany({
@@ -38,32 +41,52 @@ const getAdminById = async (id: string) => {
   return admin;
 }
 
-const softDeleteAdmin = async (id: string) => {
-  const admin = await prisma.admin.findUnique({
+const softDeleteAdmin = async (id: string, user: IRequestUser) => {
+  const isAdminExist = await prisma.admin.findUnique({
     where: {
-      id: id
+      id,
+      isDeleted: false,
     }
   });
 
-  if (!admin) {
+  if (!isAdminExist) {
     throw new AppError(status.NOT_FOUND, "Admin not found");
   }
 
-  if (admin.isDeleted) {
-    throw new AppError(status.BAD_REQUEST, "Admin Already deleted");
+  if (isAdminExist.id === user.userId) {
+    throw new AppError(status.BAD_REQUEST, "You cant delete yourself");
   }
 
-  const result = await prisma.admin.update({
-    where: {
-      id: id
-    },
-    data: {
-      isDeleted: true,
-      deleteAt: new Date(),
-    }
-  });
-  return result;
+  const result = await prisma.$transaction(async (tx) => {
+    await tx.admin.update({
+      where: {
+        id: isAdminExist.id
+      },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
+      }
+    });
 
+    await tx.user.update({
+      where: {
+        id: isAdminExist.userId,
+      },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
+        status: UserStatus.DELETED
+      }
+    });
+
+    await tx.session.deleteMany({
+      where: {
+        id: isAdminExist.userId
+      }
+    });
+
+
+  })
 }
 
 const updateAdminData = async (id: string, payload: IAdminUpdatePayload) => {

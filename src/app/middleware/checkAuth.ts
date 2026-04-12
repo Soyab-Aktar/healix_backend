@@ -59,12 +59,14 @@ export const checkAuth = (...authRoles: Role[]) => async (req: Request, res: Res
         if (authRoles.length > 0 && !authRoles.includes(user.role)) {
           throw new AppError(status.FORBIDDEN, 'Forbidden access! You do not have permission to access this resource.');
         }
-      }
 
-      const accessToken = cookieUtils.getCookie(req, 'accessToken');
+        req.user = {
+          userId: user.id,
+          role: user.role,
+          email: user.email,
+        }
 
-      if (!accessToken) {
-        throw new AppError(status.UNAUTHORIZED, 'Unauthorized access! No access token provided.');
+
       }
 
 
@@ -86,6 +88,8 @@ export const checkAuth = (...authRoles: Role[]) => async (req: Request, res: Res
     if (authRoles.length > 0 && !authRoles.includes(verifiedToken.data!.role as Role)) {
       throw new AppError(status.FORBIDDEN, 'Forbidden access! You do not have permission to access this resource.');
     }
+
+
 
     next()
   } catch (error: any) {

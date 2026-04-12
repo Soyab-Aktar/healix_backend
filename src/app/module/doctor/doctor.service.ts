@@ -95,7 +95,7 @@ const softDeleteDoctor = async (id: string) => {
 
     await tx.user.update({
       where: {
-        id: isDoctorExist.id,
+        id: isDoctorExist.userId,
       },
       data: {
         isDeleted: true,
@@ -106,7 +106,7 @@ const softDeleteDoctor = async (id: string) => {
 
     await tx.session.deleteMany({
       where: {
-        userId: isDoctorExist.id,
+        userId: isDoctorExist.userId,
       }
     });
 
