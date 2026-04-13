@@ -380,12 +380,61 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
     }
   });
 
+  if (isUserExist.needPasswordChange) {
+    await prisma.user.update({
+      where: {
+        id: isUserExist.id
+      },
+      data: {
+        needPasswordChange: false,
+      }
+    })
+  }
+
   await prisma.session.deleteMany({
     where: {
       userId: isUserExist.id,
     }
   })
 
+}
+
+const googleLoginSuccess = async (session: Record<string, any>) => {
+  const isPatientExist = await prisma.patient.findUnique({
+    where: {
+      userId: session.user.id,
+    }
+  });
+
+  if (!isPatientExist) {
+    await prisma.patient.create({
+      data: {
+        userId: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+      }
+    })
+  }
+
+  const accessToken = tokenUtils.getAccessToken({
+    userId: session.user.id,
+    role: session.user.role,
+    name: session.user.name,
+    email: session.user.email,
+
+  });
+
+  const refreshToken = tokenUtils.getRefreshToken({
+    userId: session.user.id,
+    role: session.user.role,
+    name: session.user.name,
+    email: session.user.email,
+  });
+
+  return {
+    accessToken,
+    refreshToken,
+  }
 }
 
 
@@ -399,4 +448,6 @@ export const AuthService = {
   verifyEmail,
   forgotPassword,
   resetPassword,
+  googleLoginSuccess,
+
 };
