@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Healix • Verify Email</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Space+Mono:wght@700&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #1a1a1a;
+      font-family: 'Inter', Arial, sans-serif;
+      color: #fff;
+    }
+
+    .wrapper {
+      width: 100%;
+      padding: 30px 12px;
+    }
+
+    .container {
+      max-width: 520px;
+      margin: auto;
+    }
+
+    .top-pill {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid #f5c800;
+      border-radius: 999px;
+      padding: 4px 12px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: #f5c800;
+      font-weight: 600;
+    }
+
+    .card {
+      background: #222;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .card-top {
+      padding: 32px;
+    }
+
+    .headline {
+      font-size: 32px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .subtext {
+      font-size: 14px;
+      color: #aaa;
+      line-height: 1.6;
+    }
+
+    .card-bottom {
+      background: #f5c800;
+      margin: 0 14px 14px;
+      border-radius: 10px;
+      padding: 24px;
+    }
+
+    .otp-label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #444;
+      margin-bottom: 8px;
+    }
+
+    .otp-greeting {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 18px;
+    }
+
+    .otp-box {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    /* PERFECT OTP ALIGNMENT */
+    .otp-digit {
+      display: inline-block;
+      width: 40px;
+      height: 52px;
+      line-height: 52px;
+      margin: 4px;
+      background: #1a1a1a;
+      border-radius: 6px;
+      font-family: 'Space Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: #f5c800;
+      text-align: center;
+    }
+
+    .info-box {
+      font-size: 12px;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .expiry {
+      background: rgba(0, 0, 0, 0.08);
+      color: #222;
+    }
+
+    .security {
+      background: #111;
+      color: #aaa;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .brand {
+      font-weight: 700;
+      color: #f5c800;
+    }
+
+    @media (max-width: 480px) {
+      .card-top {
+        padding: 24px;
+      }
+
+      .headline {
+        font-size: 26px;
+      }
+
+      .otp-digit {
+        width: 36px;
+        height: 48px;
+        line-height: 48px;
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="container">
+
+      <div class="top-pill">Email Verification</div>
+
+      <div class="card">
+
+        <!-- HEADER -->
+        <div class="card-top">
+          <h1 class="headline">Confirm Your Email</h1>
+
+          <p class="subtext">
+            You're almost in. Use the verification code below to complete your
+            Healix account setup.
+          </p>
+        </div>
+
+        <!-- OTP SECTION -->
+        <div class="card-bottom">
+          <div class="otp-label">Verification Code</div>
+
+          <div class="otp-greeting">
+            Hi <%= name %>, enter this code to continue:
+          </div>
+
+          <div class="otp-box">
+            <% for(let i=0; i < otp.length; i++) { %>
+              <span class="otp-digit">
+                <%= otp[i] %>
+              </span>
+              <% } %>
+          </div>
+
+          <div class="info-box expiry">
+            This code expires in <strong>2 minutes</strong>
+          </div>
+
+          <div class="info-box security">
+            If you didn’t request this, you can safely ignore this email.
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+          <div class="brand">Healix</div>
+          <div>Secure access for your healthcare, simplified.</div>
+          <div>© <%= new Date().getFullYear() %> Healix</div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</body>
+
+</html>

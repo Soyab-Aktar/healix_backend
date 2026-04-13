@@ -2,6 +2,8 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { Role, UserStatus } from "../../generated/prisma/enums";
 import { prisma } from "./prisma";
+import { bearer, emailOTP } from "better-auth/plugins";
+import { sendEmail } from "../utils/email";
 // If your Prisma file is located elsewhere, you can change the path
 
 export const auth = betterAuth({
@@ -11,7 +13,58 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
   },
+  emailVerification: {
+    sendOnSignIn: true,
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+  },
+  plugins: [
+    bearer(),
+    emailOTP({
+      overrideDefaultEmailVerification: true,
+      async sendVerificationOTP({ email, otp, type }) {
+        if (type === 'email-verification') {
+          const user = await prisma.user.findUnique({
+            where: {
+              email,
+            }
+          });
+          if (user && !user.emailVerified) {
+            sendEmail({
+              to: email,
+              subject: "Verify your Email",
+              templateName: "otp",
+              templateData: {
+                name: user.name,
+                otp,
+              }
+            })
+          }
+        } else if (type === 'forget-password') {
+          const user = await prisma.user.findUnique({
+            where: {
+              email,
+            }
+          });
+          if (user) {
+            sendEmail({
+              to: email,
+              subject: "Password Reset OTP",
+              templateName: "otp",
+              templateData: {
+                name: user.name,
+                otp,
+              }
+            })
+          }
+        }
+      },
+      expiresIn: 2 * 60,
+      otpLength: 6,
+    }),
+  ],
 
   user: {
     additionalFields: {
@@ -46,6 +99,8 @@ export const auth = betterAuth({
       },
     }
   },
+
+
 
   session: {
     expiresIn: 60 * 60 * 60 * 24, // 1 day in seconds
