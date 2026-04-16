@@ -100,7 +100,7 @@ const getNewToken = catchAsync(
     sendResponce(res, {
       httpStatusCode: status.OK,
       success: true,
-      message: "User profile fetched successfully",
+      message: "New Token Generated",
       data: {
         accessToken,
         refreshToken: newRefreshToken,

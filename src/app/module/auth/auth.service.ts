@@ -21,18 +21,12 @@ const registerPatient = async (payload: IRegisterPatientPayload) => {
       name,
       email,
       password,
-      //default values
-      // needsPasswordChange: false,
-      // role: Role.PATIENT
     }
   })
 
   if (!data.user) {
-    // throw new Error("Failed to register patient");
     throw new AppError(status.BAD_REQUEST, "Failed to register patient");
   }
-
-  //TODO : Create Patient Profile In Transaction After Sign Up Of Patient In USer Model
   try {
     const patient = await prisma.$transaction(async (tx) => {
 
@@ -190,7 +184,6 @@ const getNewToken = async (refreshToken: string, sessionToken: string) => {
 
   const data = verifiedRefreshToken.data as JwtPayload;
 
-  console.log({ data });
   const newAccessToken = tokenUtils.getAccessToken({
     userId: data.userId,
     role: data.role,
@@ -211,9 +204,6 @@ const getNewToken = async (refreshToken: string, sessionToken: string) => {
     emailVerified: data.emailVerified,
   });
 
-  console.log({
-    newAccessToken, newRefreshToken
-  })
 
   const updatedSessionToken = await prisma.session.update({
     where: {

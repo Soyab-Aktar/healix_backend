@@ -6,7 +6,6 @@ import { jwtUtils } from "./jwt";
 import { cookieUtils } from "./cookie";
 
 
-//Creating access token
 const getAccessToken = (payload: JwtPayload) => {
   const accessToken = jwtUtils.createToken(
     payload,
