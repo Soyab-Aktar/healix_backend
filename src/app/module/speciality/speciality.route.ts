@@ -11,8 +11,8 @@ const router = Router();
 router.post(
   '/',
   // checkAuth(Role.SUPER_ADMIN, Role.ADMIN),
-  validateRequest(SpecialityValidation.createSpecialityZodSchema),
   multerUpload.single("file"),
+  validateRequest(SpecialityValidation.createSpecialityZodSchema),
   SpecialtyController.createSpeciality
 );
 router.get('/', SpecialtyController.getAllSpeciality);
