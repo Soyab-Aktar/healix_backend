@@ -3,49 +3,79 @@ import AppError from "../../errorHelpers/AppError";
 import { prisma } from "../../lib/prisma"
 import { IUpdateDoctorPayload } from "./doctor.interface";
 import { UserStatus } from "../../../generated/prisma/enums";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import { IQueryParams } from "../../interfaces/query.interface";
+import { doctorFilterableFields, DoctorIncludeConfig, doctorSearchableFields } from "./doctor.constant";
+import { Doctor, Prisma } from "../../../generated/prisma/client";
 
-const getAllDoctors = async () => {
+const getAllDoctors = async (query: IQueryParams) => {
   // Fetch all non-deleted doctors
-  const result = await prisma.doctor.findMany({
-    where: {
-      isDeleted: false,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      profilePhoto: true,
-      contactNumber: true,
-      registrationNumber: true,
-      experience: true,
-      gender: true,
-      appointmentFee: true,
-      qualification: true,
-      currentWorkingPlace: true,
-      designation: true,
-      averageRating: true,
-      createdAt: true,
-      updatedAt: true,
-      specialties: {
-        select: {
-          specialty: {
-            select: {
-              id: true,
-              title: true,
-            },
-          },
-        },
-      },
-    },
-  });
-  const doctors = result.map((doctor) => ({
-    ...doctor,
-    specialties: doctor.specialties.map((s) => s.specialty),
-  }));
-  return doctors;
+  // const result = await prisma.doctor.findMany({
+  //   where: {
+  //     isDeleted: false,
+  //   },
+  //   orderBy: {
+  //     createdAt: "desc",
+  //   },
+  //   select: {
+  //     id: true,
+  //     name: true,
+  //     email: true,
+  //     profilePhoto: true,
+  //     contactNumber: true,
+  //     registrationNumber: true,
+  //     experience: true,
+  //     gender: true,
+  //     appointmentFee: true,
+  //     qualification: true,
+  //     currentWorkingPlace: true,
+  //     designation: true,
+  //     averageRating: true,
+  //     createdAt: true,
+  //     updatedAt: true,
+  //     specialties: {
+  //       select: {
+  //         specialty: {
+  //           select: {
+  //             id: true,
+  //             title: true,
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  // });
+  // const doctors = result.map((doctor) => ({
+  //   ...doctor,
+  //   specialties: doctor.specialties.map((s) => s.specialty),
+  // }));
+  // return doctors;
+  const quaryBuilder = new QueryBuilder<Doctor, Prisma.DoctorWhereInput, Prisma.DoctorInclude>(
+    prisma.doctor,
+    query,
+    {
+      searchableFields: doctorSearchableFields,
+      filterableFields: doctorFilterableFields,
+    }
+  )
+
+  const result = await quaryBuilder
+    .search()
+    .filter()
+    .where({ isDeleted: false })
+    .include({
+      user: true,
+      specialties: true,
+    })
+    .dynamicInclude(DoctorIncludeConfig)
+    .paginate()
+    .sort()
+    .fields()
+    .execute()
+
+  return result;
+
+
 };
 
 const getDoctorsById = async (id: string) => {
