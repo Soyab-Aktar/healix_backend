@@ -38,7 +38,6 @@ export class QueryBuilder<
   search(): this {
     const { searchTerm } = this.queryParams;
     const { searchableFields } = this.config;
-    // doctorSearchableFields = ['user.name', 'user.email', 'specialties.specialty.title' , 'specialties.specialty.description']
     if (searchTerm && searchableFields && searchableFields.length > 0) {
       const searchConditions: Record<string, unknown>[] = searchableFields.map((field) => {
         if (field.includes(".")) {

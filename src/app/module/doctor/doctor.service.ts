@@ -5,7 +5,7 @@ import { IUpdateDoctorPayload } from "./doctor.interface";
 import { UserStatus } from "../../../generated/prisma/enums";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { IQueryParams } from "../../interfaces/query.interface";
-import { doctorFilterableFields, DoctorIncludeConfig, doctorSearchableFields } from "./doctor.constant";
+import { doctorFilterableFields, doctorIncludeConfig, doctorSearchableFields } from "./doctor.constant";
 import { Doctor, Prisma } from "../../../generated/prisma/client";
 
 const getAllDoctors = async (query: IQueryParams) => {
@@ -58,16 +58,19 @@ const getAllDoctors = async (query: IQueryParams) => {
       filterableFields: doctorFilterableFields,
     }
   )
-
   const result = await quaryBuilder
     .search()
     .filter()
     .where({ isDeleted: false })
     .include({
       user: true,
-      specialties: true,
+      specialties: {
+        include: {
+          specialty: true
+        }
+      },
     })
-    .dynamicInclude(DoctorIncludeConfig)
+    .dynamicInclude(doctorIncludeConfig)
     .paginate()
     .sort()
     .fields()
