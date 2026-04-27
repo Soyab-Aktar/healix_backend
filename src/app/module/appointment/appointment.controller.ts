@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
 import status from "http-status";
 import { catchAsync } from "../../shared/catchAsync";
-import { sendResponse } from "../../shared/sendResponse";
 import { AppointmentService } from "./appointment.service";
+import { sendResponce } from "../../shared/sendResponce";
 
 const bookAppointment = catchAsync(async (req: Request, res: Response) => {
   const payload = req.body;
   const user = req.user;
   const appointment = await AppointmentService.bookAppointment(payload, user);
-  sendResponse(res, {
+  sendResponce(res, {
     success: true,
     httpStatusCode: status.CREATED,
     message: 'Appointment booked successfully',
@@ -19,7 +19,7 @@ const bookAppointment = catchAsync(async (req: Request, res: Response) => {
 const getMyAppointments = catchAsync(async (req: Request, res: Response) => {
   const user = req.user;
   const appointments = await AppointmentService.getMyAppointments(user);
-  sendResponse(res, {
+  sendResponce(res, {
     success: true,
     httpStatusCode: status.OK,
     message: 'Appointments retrieved successfully',
@@ -33,7 +33,7 @@ const changeAppointmentStatus = catchAsync(async (req: Request, res: Response) =
   const user = req.user;
 
   const updatedAppointment = await AppointmentService.changeAppointmentStatus(appointmentId as string, payload, user);
-  sendResponse(res, {
+  sendResponce(res, {
     success: true,
     httpStatusCode: status.OK,
     message: 'Appointment status updated successfully',
@@ -46,7 +46,7 @@ const getMySingleAppointment = catchAsync(async (req: Request, res: Response) =>
   const user = req.user;
 
   const appointment = await AppointmentService.getMySingleAppointment(appointmentId as string, user);
-  sendResponse(res, {
+  sendResponce(res, {
     success: true,
     httpStatusCode: status.OK,
     message: 'Appointment retrieved successfully',
@@ -56,7 +56,7 @@ const getMySingleAppointment = catchAsync(async (req: Request, res: Response) =>
 
 const getAllAppointments = catchAsync(async (req: Request, res: Response) => {
   const appointments = await AppointmentService.getAllAppointments();
-  sendResponse(res, {
+  sendResponce(res, {
     success: true,
     httpStatusCode: status.OK,
     message: 'All appointments retrieved successfully',
@@ -68,7 +68,7 @@ const bookAppointmentWithPayLater = catchAsync(async (req: Request, res: Respons
   const payload = req.body;
   const user = req.user;
   const appointment = await AppointmentService.bookAppointmentWithPayLater(payload, user);
-  sendResponse(res, {
+  sendResponce(res, {
     success: true,
     httpStatusCode: status.CREATED,
     message: 'Appointment booked successfully with Pay Later option',
@@ -81,7 +81,7 @@ const initiatePayment = catchAsync(async (req: Request, res: Response) => {
   const user = req.user;
   const paymentInfo = await AppointmentService.initiatePayment(appointmentId as string, user);
 
-  sendResponse(res, {
+  sendResponce(res, {
     success: true,
     httpStatusCode: status.OK,
     message: 'Payment initiated successfully',
