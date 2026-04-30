@@ -178,11 +178,61 @@ const changeAppointmentStatus = async (appointmentId: string, appointmentStatus:
     }
   })
 }
-const getMySingleAppointment = async () => {
+const getMySingleAppointment = async (appointmentId: string, user: IRequestUser) => {
 
+  const patientData = await prisma.patient.findUnique({
+    where: {
+      email: user?.email
+    }
+  });
+
+  const doctorData = await prisma.doctor.findUnique({
+    where: {
+      email: user?.email
+    }
+  });
+
+  let appointment;
+
+  if (patientData) {
+    appointment = await prisma.appointment.findFirst({
+      where: {
+        id: appointmentId,
+        patientId: patientData.id
+      },
+      include: {
+        doctor: true,
+        schedule: true
+      }
+    });
+  } else if (doctorData) {
+    appointment = await prisma.appointment.findFirst({
+      where: {
+        id: appointmentId,
+        doctorId: doctorData.id
+      },
+      include: {
+        patient: true,
+        schedule: true
+      }
+    });
+  }
+
+  if (!appointment) {
+    throw new AppError(status.NOT_FOUND, "Appointment not found");
+  }
+
+  return appointment;
 }
 const getAllAppointments = async () => {
-
+  const appointments = await prisma.appointment.findMany({
+    include: {
+      doctor: true,
+      patient: true,
+      schedule: true
+    }
+  });
+  return appointments;
 }
 const bookAppointmentWithPayLater = async (payload: IBookAppointmentPayload, user: IRequestUser) => {
 
@@ -315,6 +365,59 @@ const initiatePayment = async (appointmentId: string, user: IRequestUser) => {
 
 }
 
+const cancelUnpaidAppointments = async () => {
+  const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+  const unpaidAppointments = await prisma.appointment.findMany({
+    where: {
+      status: AppointmentStatus.SCHEDULED,
+      createdAt: {
+        lte: thirtyMinutesAgo,
+      },
+      paymentStatus: PaymentStatus.UNPAID,
+    }
+  });
+
+  const appointmentToCancel = unpaidAppointments.map(appointment => appointment.id);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.appointment.updateMany({
+      where: {
+        id: {
+          in: appointmentToCancel
+        }
+      },
+      data: {
+        status: AppointmentStatus.CANCELED
+      }
+    });
+
+    await tx.payment.deleteMany({
+      where: {
+        appointmentId: {
+          in: appointmentToCancel
+        }
+      }
+    });
+
+    for (const unpaidAppointment of unpaidAppointments) {
+      await tx.doctorSchedules.update({
+        where: {
+          doctorId_scheduleId: {
+            doctorId: unpaidAppointment.doctorId,
+            scheduleId: unpaidAppointment.scheduleId
+          }
+        },
+        data: {
+          isBooked: false,
+        }
+      })
+    }
+
+
+  });
+
+}
+
 export const AppointmentService = {
   bookAppointment,
   getMyAppointments,
@@ -323,4 +426,5 @@ export const AppointmentService = {
   getAllAppointments,
   bookAppointmentWithPayLater,
   initiatePayment,
+  cancelUnpaidAppointments,
 }

@@ -95,7 +95,7 @@ const updateMyDoctorSchedule = async (user: IRequestUser, paylaod: IUpdateDoctor
     }
   });
   const deleteIds = paylaod.scheduleIds.filter(schedule => schedule.shouldDelete).map(schedule => schedule.id);
-  const createIds = paylaod.scheduleIds.filter(schedule => schedule.shouldDelete).map(schedule => schedule.id);
+  const createIds = paylaod.scheduleIds.filter(schedule => !schedule.shouldDelete).map(schedule => schedule.id);
 
   const result = await prisma.$transaction(async (tx) => {
     await tx.doctorSchedules.deleteMany({
