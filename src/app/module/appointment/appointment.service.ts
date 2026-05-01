@@ -1,4 +1,4 @@
-import { includes, uuidv7 } from "zod";
+import { v7 as uuidv7 } from "uuid"
 import { IRequestUser } from "../../interfaces/requestUser.interface"
 import { prisma } from "../../lib/prisma"
 import { IBookAppointmentPayload } from "./appointment.interface"
@@ -30,6 +30,10 @@ const bookAppointment = async (payload: IBookAppointmentPayload, user: IRequestU
       }
     }
   });
+
+  if (doctorSchedulesData.isBooked === true) {
+    throw new AppError(status.BAD_REQUEST, "This Doctor Schedule is already booked");
+  }
 
   const videoCallingId = String(uuidv7());
 
@@ -75,7 +79,7 @@ const bookAppointment = async (payload: IBookAppointmentPayload, user: IRequestU
             product_data: {
               name: `Appointment with Dr. ${doctorData.name}`,
             },
-            unit_amount: doctorData.appointmentFee * 120,
+            unit_amount: doctorData.appointmentFee * 100,
           },
           quantity: 1,
         }
@@ -84,9 +88,9 @@ const bookAppointment = async (payload: IBookAppointmentPayload, user: IRequestU
         appointmentId: appointmentData.id,
         paymentId: paymentData.id,
       },
-      success_url: `${envVars.FRONTEND_URL}/dashborad/payment/payment-success`,
+      success_url: `${envVars.FRONTEND_URL}/dashborad/payment/payment-success?appoinment_id=${appointmentData.id}&payment_id=${paymentData.id}`,
       // cancel_url: `${envVars.FRONTEND_URL}/dashborad/payment/payment-failed`,
-      cancel_url: `${envVars.FRONTEND_URL}/dashborad/appointments`,
+      cancel_url: `${envVars.FRONTEND_URL}/dashborad/appointments?error=payment_cancelled`,
 
     })
 
@@ -142,6 +146,7 @@ const getMyAppointments = async (user: IRequestUser) => {
   } else {
     throw new AppError(status.NOT_FOUND, "User Not Found");
   }
+  return appointments;
 }
 
 //* 1. Completed Or Cancelled Appointments should not be allowed to update status
@@ -153,16 +158,11 @@ const changeAppointmentStatus = async (appointmentId: string, appointmentStatus:
   const appointmentData = await prisma.appointment.findUniqueOrThrow({
     where: {
       id: appointmentId,
-      // status: AppointmentStatus.SCHEDULED
     },
     include: {
       doctor: true
     }
   });
-
-  // if (!appointmentData) {
-  //     throw new AppError(status.NOT_FOUND, "Appointment not found or already completed/cancelled");
-  // }
 
   if (user?.role === Role.DOCTOR) {
     if (!(user?.email === appointmentData.doctor.email))
@@ -352,9 +352,9 @@ const initiatePayment = async (appointmentId: string, user: IRequestUser) => {
       appointmentId: appointmentData.id,
       paymentId: appointmentData.payment?.id,
     },
-    success_url: `${envVars.FRONTEND_URL}/dashborad/payment/payment-success`,
+    success_url: `${envVars.FRONTEND_URL}/dashborad/payment/payment-success?appoinment_id=${appointmentData.id}&payment_id=${appointmentData.payment.id}`,
     // cancel_url: `${envVars.FRONTEND_URL}/dashborad/payment/payment-failed`,
-    cancel_url: `${envVars.FRONTEND_URL}/dashborad/appointments`,
+    cancel_url: `${envVars.FRONTEND_URL}/dashborad/appointments?error=payment_cancelled`,
 
   })
 

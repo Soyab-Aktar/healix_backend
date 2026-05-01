@@ -3,7 +3,6 @@ import AppError from "../../errorHelpers/AppError";
 import { prisma } from "../../lib/prisma";
 import { IAdminUpdatePayload } from "./admin.interface";
 import { IRequestUser } from "../../interfaces/requestUser.interface";
-import { isAnyArrayBuffer } from "node:util/types";
 import { UserStatus } from "../../../generated/prisma/enums";
 
 const getAllAdmins = async () => {
