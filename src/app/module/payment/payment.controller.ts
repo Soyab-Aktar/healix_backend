@@ -4,7 +4,7 @@ import { envVars } from "../../config/env";
 import status from "http-status";
 import { stripe } from "../../config/stripe";
 import { PaymentService } from "./payment.service";
-import { sendResponce } from "../../shared/sendResponce";
+import { sendResponse } from "../../shared/sendResponse";
 
 const handlerStripeWebhookEvent = catchAsync(async (req: Request, res: Response) => {
   const signature = req.headers['stripe-signature'] as string;
@@ -23,7 +23,7 @@ const handlerStripeWebhookEvent = catchAsync(async (req: Request, res: Response)
 
   try {
     const result = await PaymentService.handlerStripeWebhookEvent(event);
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "Stripe webhook event processed successfully",

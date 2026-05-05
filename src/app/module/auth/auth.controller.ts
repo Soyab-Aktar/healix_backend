@@ -5,7 +5,7 @@ import { envVars } from "../../config/env";
 import { catchAsync } from "../../shared/catchAsync";
 import { tokenUtils } from "../../utils/token";
 import { AuthService } from "./auth.service";
-import { sendResponce } from "../../shared/sendResponce";
+import { sendResponse } from "../../shared/sendResponse";
 import AppError from "../../errorHelpers/AppError";
 import { cookieUtils } from "../../utils/cookie";
 import { auth } from "../../lib/auth";
@@ -26,7 +26,7 @@ const registerPatient = catchAsync(
     tokenUtils.setRefreshTokenCookie(res, refreshToken);
     tokenUtils.setBetterAuthSessionCookie(res, token as string);
 
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.CREATED,
       success: true,
       message: "Patient registered successfully",
@@ -50,7 +50,7 @@ const loginUser = catchAsync(
     tokenUtils.setRefreshTokenCookie(res, refreshToken);
     tokenUtils.setBetterAuthSessionCookie(res, token);
 
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "User logged in successfully",
@@ -70,7 +70,7 @@ const getMe = catchAsync(
     const user = req.user;
     const result = await AuthService.getMe(user);
 
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "User profile fetched successfully",
@@ -97,7 +97,7 @@ const getNewToken = catchAsync(
     tokenUtils.setRefreshTokenCookie(res, newRefreshToken);
     tokenUtils.setBetterAuthSessionCookie(res, sessionToken)
 
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "New Token Generated",
@@ -122,7 +122,7 @@ const changePassword = catchAsync(
     tokenUtils.setRefreshTokenCookie(res, refreshToken);
     tokenUtils.setBetterAuthSessionCookie(res, token as string);
 
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "Password Changed successfully",
@@ -155,7 +155,7 @@ const logOutUser = catchAsync(
     const cookie = req.cookies;
     console.log({ cookie })
 
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "Logout successfully",
@@ -168,7 +168,7 @@ const verifyEmail = catchAsync(
   async (req: Request, res: Response) => {
     const { otp, email } = req.body;
     await AuthService.verifyEmail(otp, email);
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "Email Verified successfully",
@@ -180,7 +180,7 @@ const forgotPassword = catchAsync(
   async (req: Request, res: Response) => {
     const { email } = req.body;
     await AuthService.forgotPassword(email);
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "Email ,forgot password request send successfully",
@@ -192,7 +192,7 @@ const resetPassword = catchAsync(
   async (req: Request, res: Response) => {
     const payload = req.body;
     await AuthService.resetPassword(payload);
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "Email-Password reset successfully",

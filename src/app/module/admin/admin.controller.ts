@@ -1,6 +1,6 @@
 import status from "http-status";
 import { catchAsync } from "../../shared/catchAsync";
-import { sendResponce } from "../../shared/sendResponce";
+import { sendResponse } from "../../shared/sendResponse";
 import { AdminService } from "./admin.service";
 import { Request, Response } from "express";
 
@@ -8,7 +8,7 @@ import { Request, Response } from "express";
 const getAllAdmins = catchAsync(
   async (req: Request, res: Response) => {
     const result = await AdminService.getAllAdmins();
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "All Admins Data Retrived",
@@ -20,7 +20,7 @@ const getAdminById = catchAsync(
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const result = await AdminService.getAdminById(id as string);
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "Admin Data Retrived",
@@ -33,7 +33,7 @@ const softDeleteAdmin = catchAsync(
     const { id } = req.params;
     const user = req.user;
     const result = await AdminService.softDeleteAdmin(id as string, user);
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "Admin Deleted Successfully",
@@ -46,7 +46,7 @@ const updateAdminData = catchAsync(
     const { id } = req.params;
     const payload = req.body;
     const result = await AdminService.updateAdminData(id as string, payload);
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "Admin Updated Successfully",

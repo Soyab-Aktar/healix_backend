@@ -10,7 +10,7 @@ cloudinary.config({
   api_secret: envVars.CLOUDINARY.CLOUDINARY_API_SECRET,
 });
 
-export const uploadFileFromCloudinary = async (buffer: Buffer, fileName: string): Promise<UploadApiResponse> => {
+export const uploadFileToCloudinary = async (buffer: Buffer, fileName: string): Promise<UploadApiResponse> => {
   if (!buffer || !fileName) {
     throw new AppError(status.BAD_REQUEST, "File buffer and file name is required");
   }

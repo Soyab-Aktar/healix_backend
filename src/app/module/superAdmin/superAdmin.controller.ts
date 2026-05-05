@@ -1,6 +1,6 @@
 import status from "http-status";
 import { catchAsync } from "../../shared/catchAsync";
-import { sendResponce } from "../../shared/sendResponce";
+import { sendResponse } from "../../shared/sendResponse";
 import { Request, Response } from "express";
 import { SuperAdminService } from "./superAdmin.service";
 
@@ -8,7 +8,7 @@ import { SuperAdminService } from "./superAdmin.service";
 const getAllSuperAdmins = catchAsync(
   async (req: Request, res: Response) => {
     const result = await SuperAdminService.getAllSuperAdmins();
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "All Super Admins Data Retrived",
@@ -20,7 +20,7 @@ const getSuperAdminById = catchAsync(
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const result = await SuperAdminService.getSuperAdminById(id as string);
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "Super Admin Data Retrived",
@@ -32,7 +32,7 @@ const softDeleteSuperAdmin = catchAsync(
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const result = await SuperAdminService.softDeleteSuperAdmin(id as string);
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "Super Admin Deleted Successfully",
@@ -45,7 +45,7 @@ const updateSuperAdminData = catchAsync(
     const { id } = req.params;
     const payload = req.body;
     const result = await SuperAdminService.updateSuperAdminData(id as string, payload);
-    sendResponce(res, {
+    sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
       message: "Super Admin Updated Successfully",

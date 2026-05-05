@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import status from "http-status";
 import { IRequestUser } from "../../interfaces/requestUser.interface";
 import { catchAsync } from "../../shared/catchAsync";
-import { sendResponce } from "../../shared/sendResponce";
+import { sendResponse } from "../../shared/sendResponse";
 import { PatientService } from "./patient.service";
 
 
@@ -12,7 +12,7 @@ const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
   const payload = req.body;
   const result = await PatientService.updateMyProfile(user, payload);
 
-  sendResponce(res, {
+  sendResponse(res, {
     success: true,
     httpStatusCode: status.OK,
     message: "Profile updated successfully",

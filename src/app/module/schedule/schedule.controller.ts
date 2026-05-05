@@ -2,13 +2,13 @@ import { Request, Response } from "express";
 import status from "http-status";
 import { catchAsync } from "../../shared/catchAsync";
 import { ScheduleService } from "./schedule.service";
-import { sendResponce } from "../../shared/sendResponce";
+import { sendResponse } from "../../shared/sendResponse";
 import { IQueryParams } from "../../interfaces/query.interface";
 
 const createSchedule = catchAsync(async (req: Request, res: Response) => {
   const payload = req.body;
   const schedule = await ScheduleService.createSchedule(payload);
-  sendResponce(res, {
+  sendResponse(res, {
     success: true,
     httpStatusCode: status.CREATED,
     message: 'Schedule created successfully',
@@ -19,7 +19,7 @@ const createSchedule = catchAsync(async (req: Request, res: Response) => {
 const getAllSchedules = catchAsync(async (req: Request, res: Response) => {
   const query = req.query;
   const result = await ScheduleService.getAllSchedules(query as IQueryParams);
-  sendResponce(res, {
+  sendResponse(res, {
     success: true,
     httpStatusCode: status.OK,
     message: 'Schedules retrieved successfully',
@@ -31,7 +31,7 @@ const getAllSchedules = catchAsync(async (req: Request, res: Response) => {
 const getScheduleById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const schedule = await ScheduleService.getScheduleById(id as string);
-  sendResponce(res, {
+  sendResponse(res, {
     success: true,
     httpStatusCode: status.OK,
     message: 'Schedule retrieved successfully',
@@ -43,7 +43,7 @@ const updateSchedule = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const payload = req.body;
   const updatedSchedule = await ScheduleService.updateSchedule(id as string, payload);
-  sendResponce(res, {
+  sendResponse(res, {
     success: true,
     httpStatusCode: status.OK,
     message: 'Schedule updated successfully',
@@ -54,7 +54,7 @@ const updateSchedule = catchAsync(async (req: Request, res: Response) => {
 const deleteSchedule = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   await ScheduleService.deleteSchedule(id as string);
-  sendResponce(res, {
+  sendResponse(res, {
     success: true,
     httpStatusCode: status.OK,
     message: 'Schedule deleted successfully',
