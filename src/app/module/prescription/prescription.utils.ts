@@ -33,7 +33,7 @@ export const generatePrescriptionPDF = async (prescriptionData: PrescriptionData
       doc
         .fontSize(10)
         .font('Helvetica')
-        .text('PH Healthcare Services', {
+        .text('Healix Services', {
           align: 'center',
         });
       doc.text('Your Health, Our Priority', { align: 'center' });

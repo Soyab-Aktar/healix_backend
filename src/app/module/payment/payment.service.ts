@@ -28,7 +28,7 @@ const handlerStripeWebhookEvent = async (event: Stripe.Event) => {
       const paymentId = session.metadata?.paymentId;
 
       if (!appointmentId || !paymentId) {
-        console.error("Missing metadata in webhook event");
+        console.error("⚠️ Missing metadata in webhook event");
         return { message: "Missing metadata" };
       }
 
@@ -44,7 +44,7 @@ const handlerStripeWebhookEvent = async (event: Stripe.Event) => {
       });
 
       if (!appointment) {
-        console.error(`Appointment ${appointmentId} not found. Payment may be for expired appointment.`);
+        console.error(`⚠️ Appointment ${appointmentId} not found. Payment may be for expired appointment.`);
         return { message: "Appointment not found" };
       }
       let pdfBuffer: Buffer | null = null;
@@ -81,7 +81,7 @@ const handlerStripeWebhookEvent = async (event: Stripe.Event) => {
             // Upload PDF to Cloudinary
             const cloudinaryResponse = await uploadFileToCloudinary(
               pdfBuffer,
-              `ph-healthcare/invoices/invoice-${paymentId}-${Date.now()}.pdf`
+              `healix/invoices/invoice-${paymentId}-${Date.now()}.pdf`
             );
 
             invoiceUrl = cloudinaryResponse?.secure_url;
@@ -134,14 +134,14 @@ const handlerStripeWebhookEvent = async (event: Stripe.Event) => {
             ]
           });
 
-          console.log(`Invoice email sent to ${appointment.patient.email}`);
+          console.log(`✅ Invoice email sent to ${appointment.patient.email}`);
         } catch (emailError) {
-          console.error("Error sending invoice email:", emailError);
+          console.error("❌ Error sending invoice email:", emailError);
           // Log but don't fail the payment if email fails
         }
       }
 
-      console.log(`Payment ${session.payment_status} for appointment ${appointmentId}`);
+      console.log(`✅ Payment ${session.payment_status} for appointment ${appointmentId}`);
       break;
     }
 

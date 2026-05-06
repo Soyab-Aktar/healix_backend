@@ -42,7 +42,7 @@ export const generateInvoicePdf = async (data: InvoiceData): Promise<Buffer> => 
       doc
         .fontSize(10)
         .font('Helvetica')
-        .text('PH Healthcare Services', {
+        .text('Healix Services', {
           align: 'center',
         });
       doc.text('Your Health, Our Priority', { align: 'center' });
@@ -122,7 +122,7 @@ export const generateInvoicePdf = async (data: InvoiceData): Promise<Buffer> => 
       const amountY = doc.y;
       doc.fontSize(10).font('Helvetica');
       doc.text('Consultation Fee', col1X, amountY);
-      doc.text(`${data.amount.toFixed(2)} BDT`, col2X, amountY, { align: 'right' });
+      doc.text(`${data.amount.toFixed(2)} Rupees`, col2X, amountY, { align: 'right' });
 
       doc.moveDown(0.8);
 
@@ -130,7 +130,7 @@ export const generateInvoicePdf = async (data: InvoiceData): Promise<Buffer> => 
       const totalY = doc.y;
       doc.fontSize(11).font('Helvetica-Bold');
       doc.text('Total Amount', col1X, totalY);
-      doc.text(`${data.amount.toFixed(2)} BDT`, col2X, totalY, { align: 'right' });
+      doc.text(`${data.amount.toFixed(2)} Rupees`, col2X, totalY, { align: 'right' });
 
       // Separator line
       doc.moveTo(col1X, doc.y).lineTo(col2X + 80, doc.y).stroke();
@@ -139,7 +139,7 @@ export const generateInvoicePdf = async (data: InvoiceData): Promise<Buffer> => 
 
       // Footer
       doc.fontSize(9).font('Helvetica').text(
-        'Thank you for choosing PH Healthcare. This is an electronically generated invoice.',
+        'Thank you for choosing Healix. This is an electronically generated invoice.',
         {
           align: 'center',
         }

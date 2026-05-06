@@ -118,6 +118,9 @@ const givePrescription = async (user: IRequestUser, payload: ICreatePrescription
     }
 
     return updatedPrescription;
+  }, {
+    maxWait: 15000,
+    timeout: 20000,
   })
 
 
