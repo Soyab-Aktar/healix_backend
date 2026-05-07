@@ -17,5 +17,6 @@ router.patch(
   validateRequest(superAdminValidation.superAdminUpdateZodSchema),
   SuperAdminController.updateSuperAdminData
 );
+router.patch("/change-user-role", checkAuth(Role.SUPER_ADMIN), SuperAdminController.changeUserRole);
 
 export const SuperAdminRoute = router;

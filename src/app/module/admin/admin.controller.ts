@@ -55,6 +55,19 @@ const updateAdminData = catchAsync(
   }
 )
 
+const changeUserStatus = catchAsync(
+  async (req: Request, res: Response) => {
+    const payload = req.body;
+    const user = req.user;
+    const result = await AdminService.changeUserStatus(user, payload);
+    sendResponse(res, {
+      httpStatusCode: status.OK,
+      success: true,
+      message: "User Status Changed Successfully",
+      data: result
+    })
+  }
+)
 export const AdminController = {
-  getAllAdmins, getAdminById, softDeleteAdmin, updateAdminData
+  getAllAdmins, getAdminById, softDeleteAdmin, updateAdminData, changeUserStatus
 }

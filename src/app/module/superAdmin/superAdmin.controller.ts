@@ -53,7 +53,23 @@ const updateSuperAdminData = catchAsync(
     })
   }
 )
+const changeUserRole = catchAsync(
+  async (req: Request, res: Response) => {
+    const payload = req.body;
+    const user = req.user;
+    const result = await SuperAdminService.changeUserRole(user, payload);
+    sendResponse(res, {
+      httpStatusCode: status.OK,
+      success: true,
+      message: "User Role Changed Successfully",
+      data: result
+    })
+  }
+)
 
 export const SuperAdminController = {
-  getAllSuperAdmins, getSuperAdminById, softDeleteSuperAdmin, updateSuperAdminData,
+  getAllSuperAdmins, getSuperAdminById,
+  softDeleteSuperAdmin, updateSuperAdminData,
+  changeUserRole,
+
 }
