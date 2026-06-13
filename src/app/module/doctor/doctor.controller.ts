@@ -51,7 +51,7 @@ const updateDoctorData = catchAsync(
     sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
-      message: "Doctor Deleted successfully",
+      message: "Doctor Updated successfully",
       data: result
     })
   }

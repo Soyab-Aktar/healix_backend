@@ -92,7 +92,15 @@ const getDoctorsById = async (id: string) => {
         select: {
           specialty: true
         }
-      }
+      },
+      doctorSchedules: {
+        include: {
+          schedule: true
+        }
+      },
+      reviews: true,
+      user: true,
+      appointments: true,
     }
   });
 

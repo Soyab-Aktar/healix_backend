@@ -216,6 +216,7 @@ const getNewToken = async (refreshToken: string, sessionToken: string) => {
       updatedAt: new Date(),
     }
   })
+  console.log("New Access Token Created !!!!")
 
   return {
     accessToken: newAccessToken,
