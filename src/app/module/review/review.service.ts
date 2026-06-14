@@ -4,6 +4,10 @@ import { IRequestUser } from "../../interfaces/requestUser.interface";
 import { prisma } from "../../lib/prisma";
 import { ICreateReviewPayload } from "./review.interface";
 import { PaymentStatus, Role } from "../../../generated/prisma/enums";
+import { IQueryParams } from "../../interfaces/query.interface";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import { Prisma, Review } from "../../../generated/prisma/client";
+import { reviewFilterableFields, reviewIncludeConfig, reviewSearchableFields } from "./review.constant";
 
 const giveReview = async (user: IRequestUser, payload: ICreateReviewPayload) => {
   const patientData = await prisma.patient.findUniqueOrThrow({
@@ -69,17 +73,37 @@ const giveReview = async (user: IRequestUser, payload: ICreateReviewPayload) => 
   return result;
 }
 
-const getAllReviews = async () => {
-  const reviews = await prisma.review.findMany({
-    include: {
+const getAllReviews = async (query: IQueryParams) => {
+  const queryBuilder = new QueryBuilder<
+    Review,
+    Prisma.ReviewWhereInput,
+    Prisma.ReviewInclude
+  >(
+    prisma.review,
+    query,
+    {
+      searchableFields: reviewSearchableFields,
+      filterableFields: reviewFilterableFields,
+    }
+  );
+
+  const result = await queryBuilder
+    .search()
+    .filter()
+    .include({
       doctor: true,
       patient: true,
       appointment: true,
-    }
-  })
+    })
+    .dynamicInclude(reviewIncludeConfig)
+    .paginate()
+    .sort()
+    .fields()
+    .execute();
 
-  return reviews;
-}
+  return result;
+};
+
 
 const myReviews = async (user: IRequestUser) => {
   const isUserExist = await prisma.user.findUnique({

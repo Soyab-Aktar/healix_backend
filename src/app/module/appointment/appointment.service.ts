@@ -7,6 +7,10 @@ import status from "http-status";
 import { AppointmentStatus, PaymentStatus, Role } from "../../../generated/prisma/enums";
 import { stripe } from "../../config/stripe";
 import { envVars } from "../../config/env";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import { Appointment, Prisma } from "../../../generated/prisma/client";
+import { appointmentFilterableFields, appointmentIncludeConfig, appointmentSearchableFields } from "./appoinment.constant";
+import { IQueryParams } from "../../interfaces/query.interface";
 
 const bookAppointment = async (payload: IBookAppointmentPayload, user: IRequestUser) => {
   const patientData = await prisma.patient.findUniqueOrThrow({
@@ -224,15 +228,35 @@ const getMySingleAppointment = async (appointmentId: string, user: IRequestUser)
 
   return appointment;
 }
-const getAllAppointments = async () => {
-  const appointments = await prisma.appointment.findMany({
-    include: {
+const getAllAppointments = async (query: IQueryParams) => {
+  const queryBuilder = new QueryBuilder<
+    Appointment,
+    Prisma.AppointmentWhereInput,
+    Prisma.AppointmentInclude
+  >(
+    prisma.appointment,
+    query,
+    {
+      searchableFields: appointmentSearchableFields,
+      filterableFields: appointmentFilterableFields,
+    }
+  );
+
+  const result = await queryBuilder
+    .search()
+    .filter()
+    .include({
       doctor: true,
       patient: true,
-      schedule: true
-    }
-  });
-  return appointments;
+      schedule: true,
+    })
+    .dynamicInclude(appointmentIncludeConfig)
+    .paginate()
+    .sort()
+    .fields()
+    .execute();
+
+  return result;
 }
 const bookAppointmentWithPayLater = async (payload: IBookAppointmentPayload, user: IRequestUser) => {
 

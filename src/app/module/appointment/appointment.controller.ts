@@ -3,6 +3,7 @@ import status from "http-status";
 import { catchAsync } from "../../shared/catchAsync";
 import { AppointmentService } from "./appointment.service";
 import { sendResponse } from "../../shared/sendResponse";
+import { IQueryParams } from "../../interfaces/query.interface";
 
 const bookAppointment = catchAsync(async (req: Request, res: Response) => {
   const payload = req.body;
@@ -55,12 +56,14 @@ const getMySingleAppointment = catchAsync(async (req: Request, res: Response) =>
 });
 
 const getAllAppointments = catchAsync(async (req: Request, res: Response) => {
-  const appointments = await AppointmentService.getAllAppointments();
+  const query = req.query;
+  const appointments = await AppointmentService.getAllAppointments(query as IQueryParams);
   sendResponse(res, {
     success: true,
     httpStatusCode: status.OK,
     message: 'All appointments retrieved successfully',
-    data: appointments
+    data: appointments.data,
+    meta: appointments.meta,
   });
 });
 

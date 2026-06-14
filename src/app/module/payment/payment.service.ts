@@ -5,6 +5,10 @@ import { uploadFileToCloudinary } from "../../config/cloudinary.config";
 import { prisma } from "../../lib/prisma";
 import { sendEmail } from "../../utils/email";
 import { generateInvoicePdf } from "./payment.utils";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import { Payment, Prisma } from "../../../generated/prisma/client";
+import { IQueryParams } from "../../interfaces/query.interface";
+import { paymentFilterableFields, paymentIncludeConfig, paymentSearchableFields } from "./payment.constant";
 
 
 const handlerStripeWebhookEvent = async (event: Stripe.Event) => {
@@ -165,6 +169,42 @@ const handlerStripeWebhookEvent = async (event: Stripe.Event) => {
   return { message: `Webhook Event ${event.id} processed successfully` }
 }
 
+const getAllPayments = async (query: IQueryParams) => {
+  const queryBuilder = new QueryBuilder<
+    Payment,
+    Prisma.PaymentWhereInput,
+    Prisma.PaymentInclude
+  >(
+    prisma.payment,
+    query,
+    {
+      searchableFields: paymentSearchableFields,
+      filterableFields: paymentFilterableFields,
+    }
+  );
+
+  const result = await queryBuilder
+    .search()
+    .filter()
+    .include({
+      appointment: {
+        include: {
+          doctor: true,
+          patient: true,
+          schedule: true,
+        },
+      },
+    })
+    .dynamicInclude(paymentIncludeConfig)
+    .paginate()
+    .sort()
+    .fields()
+    .execute();
+
+  return result;
+};
+
 export const PaymentService = {
-  handlerStripeWebhookEvent
+  handlerStripeWebhookEvent,
+  getAllPayments,
 }

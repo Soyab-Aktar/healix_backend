@@ -7,6 +7,10 @@ import { Role } from "../../../generated/prisma/enums";
 import { deleteFileFromCloudinary, uploadFileToCloudinary } from "../../config/cloudinary.config";
 import { generatePrescriptionPDF } from "./prescription.utils";
 import { sendEmail } from "../../utils/email";
+import { IQueryParams } from "../../interfaces/query.interface";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import { Prescription, Prisma } from "../../../generated/prisma/client";
+import { prescriptionFilterableFields, prescriptionIncludeConfig, prescriptionSearchableFields } from "./prescription.constant";
 
 const givePrescription = async (user: IRequestUser, payload: ICreatePrescriptionPayload) => {
   const doctorData = await prisma.doctor.findUniqueOrThrow({
@@ -171,14 +175,33 @@ const myPrescriptions = async (user: IRequestUser) => {
   }
 }
 
-const getAllPrescriptions = async () => {
-  const result = await prisma.prescription.findMany({
-    include: {
+const getAllPrescriptions = async (query: IQueryParams) => {
+  const queryBuilder = new QueryBuilder<
+    Prescription,
+    Prisma.PrescriptionWhereInput,
+    Prisma.PrescriptionInclude
+  >(
+    prisma.prescription,
+    query,
+    {
+      searchableFields: prescriptionSearchableFields,
+      filterableFields: prescriptionFilterableFields,
+    }
+  );
+
+  const result = await queryBuilder
+    .search()
+    .filter()
+    .include({
       patient: true,
       doctor: true,
       appointment: true,
-    }
-  })
+    })
+    .dynamicInclude(prescriptionIncludeConfig)
+    .paginate()
+    .sort()
+    .fields()
+    .execute();
 
   return result;
 };

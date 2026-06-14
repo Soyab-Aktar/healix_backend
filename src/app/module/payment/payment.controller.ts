@@ -5,6 +5,7 @@ import status from "http-status";
 import { stripe } from "../../config/stripe";
 import { PaymentService } from "./payment.service";
 import { sendResponse } from "../../shared/sendResponse";
+import { IQueryParams } from "../../interfaces/query.interface";
 
 const handlerStripeWebhookEvent = catchAsync(async (req: Request, res: Response) => {
   const signature = req.headers['stripe-signature'] as string;
@@ -34,7 +35,21 @@ const handlerStripeWebhookEvent = catchAsync(async (req: Request, res: Response)
     return res.status(status.INTERNAL_SERVER_ERROR).json({ message: "Error handleing Stripe webhook event" });
   }
 })
+const getAllPayments = catchAsync(async (req: Request, res: Response) => {
+  const query = req.query;
+
+  const payments = await PaymentService.getAllPayments(query as IQueryParams);
+
+  sendResponse(res, {
+    success: true,
+    httpStatusCode: status.OK,
+    message: "All Payments Data retrieved successfully",
+    data: payments.data,
+    meta: payments.meta,
+  });
+});
 
 export const PaymentController = {
   handlerStripeWebhookEvent,
+  getAllPayments,
 }
