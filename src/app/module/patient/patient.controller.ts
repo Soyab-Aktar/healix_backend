@@ -20,6 +20,46 @@ const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
   });
 })
 
+const getAllPatients = catchAsync(async (req: Request, res: Response) => {
+  const query = req.query;
+  const result = await PatientService.getAllPatients(query as any);
+
+  sendResponse(res, {
+    success: true,
+    httpStatusCode: status.OK,
+    message: "All Patients Data retrieved successfully",
+    data: result.data,
+    meta: result.meta
+  });
+})
+
+const getPatientById = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await PatientService.getPatientById(id as string);
+
+  sendResponse(res, {
+    success: true,
+    httpStatusCode: status.OK,
+    message: "Patient Data retrieved successfully",
+    data: result
+  });
+})
+
+const softDeletePatient = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await PatientService.softDeletePatient(id as string);
+
+  sendResponse(res, {
+    success: true,
+    httpStatusCode: status.OK,
+    message: "Patient Deleted Successfully",
+    data: result
+  });
+})
+
 export const PatientController = {
-  updateMyProfile
+  updateMyProfile,
+  getAllPatients,
+  getPatientById,
+  softDeletePatient,
 }

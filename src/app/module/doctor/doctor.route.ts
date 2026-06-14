@@ -10,6 +10,6 @@ const router = Router();
 router.get("/", DoctorController.getAllDoctors);
 router.get("/:id", DoctorController.getDoctorsById);
 router.delete("/:id", checkAuth(Role.ADMIN, Role.SUPER_ADMIN), DoctorController.softDeleteDoctor);
-router.patch("/:id", checkAuth(Role.ADMIN, Role.SUPER_ADMIN), validateRequest(updateDoctorZodSchema), DoctorController.updateDoctorData);
+router.patch("/:id", checkAuth(Role.ADMIN, Role.SUPER_ADMIN, Role.DOCTOR), validateRequest(updateDoctorZodSchema), DoctorController.updateDoctorData);
 
 export const DoctorRoute = router;

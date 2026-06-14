@@ -20,4 +20,8 @@ router.patch("/update-my-profile",
   PatientController.updateMyProfile
 )
 
+router.get("/", checkAuth(Role.ADMIN, Role.SUPER_ADMIN), PatientController.getAllPatients);
+router.get("/:id", checkAuth(Role.ADMIN, Role.SUPER_ADMIN), PatientController.getPatientById);
+router.delete("/:id", checkAuth(Role.ADMIN, Role.SUPER_ADMIN), PatientController.softDeletePatient);
+
 export const PatientRoutes = router;

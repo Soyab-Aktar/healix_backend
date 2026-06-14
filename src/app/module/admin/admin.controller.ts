@@ -41,10 +41,23 @@ const softDeleteAdmin = catchAsync(
     })
   }
 )
+import { prisma } from "../../lib/prisma";
+import AppError from "../../errorHelpers/AppError";
+import { Role } from "../../../generated/prisma/enums";
+
 const updateAdminData = catchAsync(
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const payload = req.body;
+    const user = req.user;
+
+    if (user?.role === Role.ADMIN) {
+      const adm = await prisma.admin.findUnique({ where: { id: id as string } });
+      if (!adm || adm.userId !== user.userId) {
+        throw new AppError(status.FORBIDDEN, "You are not authorized to update this admin profile");
+      }
+    }
+
     const result = await AdminService.updateAdminData(id as string, payload);
     sendResponse(res, {
       httpStatusCode: status.OK,

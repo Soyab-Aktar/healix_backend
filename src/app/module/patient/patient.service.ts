@@ -3,6 +3,13 @@ import { IRequestUser } from "../../interfaces/requestUser.interface";
 import { prisma } from "../../lib/prisma";
 import { IUpdatePatientHealthDataPayload, IUpdatePatientProfilePayload } from "./patient.interface";
 import { convertToDateTime } from "./patient.utils";
+import { UserStatus } from "../../../generated/prisma/enums";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import { IQueryParams } from "../../interfaces/query.interface";
+import { patientFilterableFields, patientIncludeConfig, patientSearchableFields } from "./patient.constant";
+import { Patient, Prisma } from "../../../generated/prisma/client";
+import status from "http-status";
+import AppError from "../../errorHelpers/AppError";
 
 const updateMyProfile = async (user: IRequestUser, payload: IUpdatePatientProfilePayload) => {
   // throw new Error("This is an intentional error to test Sentry integration in the backend.");
@@ -56,6 +63,21 @@ const updateMyProfile = async (user: IRequestUser, payload: IUpdatePatientProfil
         ) as Date;
       }
 
+      // Remove undefined keys so they don't override default values in create
+      Object.keys(healthDataToSave).forEach(key => {
+        if (healthDataToSave[key as keyof IUpdatePatientHealthDataPayload] === undefined) {
+          delete healthDataToSave[key as keyof IUpdatePatientHealthDataPayload];
+        }
+      });
+
+      const defaultHealthData = {
+        gender: "MALE" as any,
+        dateOfBirth: new Date(),
+        bloodGroup: "O_POSITIVE" as any,
+        height: "0",
+        weight: "0",
+      };
+
       await tx.patientHealthData.upsert({
         where: {
           patientId: patientData.id
@@ -63,7 +85,8 @@ const updateMyProfile = async (user: IRequestUser, payload: IUpdatePatientProfil
         update: healthDataToSave,
         create: {
           patientId: patientData.id,
-          ...healthDataToSave
+          ...defaultHealthData,
+          ...healthDataToSave,
         }
       })
     }
@@ -107,6 +130,99 @@ const updateMyProfile = async (user: IRequestUser, payload: IUpdatePatientProfil
   return result;
 };
 
+const getAllPatients = async (query: IQueryParams) => {
+  const queryBuilder = new QueryBuilder<Patient, Prisma.PatientWhereInput, Prisma.PatientInclude>(
+    prisma.patient,
+    query,
+    {
+      searchableFields: patientSearchableFields,
+      filterableFields: patientFilterableFields,
+    }
+  );
+
+  const result = await queryBuilder
+    .search()
+    .filter()
+    .where({ isDeleted: false })
+    .include({
+      user: true,
+      patientHealthData: true,
+      medicalReports: true,
+    })
+    .dynamicInclude(patientIncludeConfig)
+    .paginate()
+    .sort()
+    .fields()
+    .execute();
+
+  return result;
+};
+
+const getPatientById = async (id: string) => {
+  const patient = await prisma.patient.findUnique({
+    where: {
+      id,
+      isDeleted: false,
+    },
+    include: {
+      user: true,
+      patientHealthData: true,
+      medicalReports: true,
+    },
+  });
+
+  if (!patient) {
+    throw new AppError(status.NOT_FOUND, "Patient not found");
+  }
+
+  return patient;
+};
+
+const softDeletePatient = async (id: string) => {
+  const patient = await prisma.patient.findUnique({
+    where: {
+      id,
+      isDeleted: false,
+    },
+  });
+
+  if (!patient) {
+    throw new AppError(status.NOT_FOUND, "Patient not found");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.patient.update({
+      where: { id },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
+      },
+    });
+
+    await tx.user.update({
+      where: {
+        id: patient.userId,
+      },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
+        status: UserStatus.DELETED,
+      },
+    });
+
+    await tx.session.deleteMany({
+      where: {
+        userId: patient.userId,
+      },
+    });
+  });
+
+  return { message: "Patient Deleted Successfully" };
+};
+
 export const PatientService = {
   updateMyProfile,
+  getAllPatients,
+  getPatientById,
+  softDeletePatient,
 }

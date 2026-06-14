@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { IUpdatePatientInfoPayload, IUpdatePatientProfilePayload } from "./patient.interface";
+import { IUpdatePatientInfoPayload, IUpdatePatientProfilePayload, IUpdatePatientHealthDataPayload } from "./patient.interface";
 
 export const updateMyPatientProfileMiddleware = (req: Request, res: Response, next: NextFunction) => {
 
@@ -9,6 +9,36 @@ export const updateMyPatientProfileMiddleware = (req: Request, res: Response, ne
 
   const payload: IUpdatePatientProfilePayload = req.body;
 
+  // Sanitize empty strings and null/undefined values
+  if (payload.patientInfo) {
+    Object.keys(payload.patientInfo).forEach(key => {
+      const k = key as keyof IUpdatePatientInfoPayload;
+      if (
+        payload.patientInfo![k] === "" ||
+        payload.patientInfo![k] === null ||
+        payload.patientInfo![k] === undefined ||
+        payload.patientInfo![k] as any === "null" ||
+        payload.patientInfo![k] as any === "undefined"
+      ) {
+        delete payload.patientInfo![k];
+      }
+    });
+  }
+
+  if (payload.patientHealthData) {
+    Object.keys(payload.patientHealthData).forEach(key => {
+      const k = key as keyof IUpdatePatientHealthDataPayload;
+      if (
+        payload.patientHealthData![k] === "" ||
+        payload.patientHealthData![k] === null ||
+        payload.patientHealthData![k] === undefined ||
+        payload.patientHealthData![k] as any === "null" ||
+        payload.patientHealthData![k] as any === "undefined"
+      ) {
+        delete payload.patientHealthData![k];
+      }
+    });
+  }
 
   const files = req.files as { [fieldName: string]: Express.Multer.File[] | undefined };
 
