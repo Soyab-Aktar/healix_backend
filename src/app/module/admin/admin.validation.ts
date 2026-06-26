@@ -1,4 +1,5 @@
 import z from "zod";
+import { UserStatus } from "../../../generated/prisma/enums";
 
 const adminUpdateZodSchema = z.object({
   name: z.string().optional(),
@@ -6,6 +7,14 @@ const adminUpdateZodSchema = z.object({
   contactNumber: z.string().optional(),
 })
 
+const changeUserStatusZodSchema = z.object({
+  userId: z.string("User ID is required"),
+  userStatus: z.nativeEnum(UserStatus, {
+    error: "User status is required",
+  }),
+})
+
 export const adminValidation = {
   adminUpdateZodSchema,
+  changeUserStatusZodSchema,
 }

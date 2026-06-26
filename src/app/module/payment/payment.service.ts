@@ -176,7 +176,11 @@ const getAllPayments = async (query: IQueryParams) => {
     Prisma.PaymentInclude
   >(
     prisma.payment,
-    query,
+    {
+      sortBy: "createdAt",
+      sortOrder: "desc",
+      ...query,
+    },
     {
       searchableFields: paymentSearchableFields,
       filterableFields: paymentFilterableFields,

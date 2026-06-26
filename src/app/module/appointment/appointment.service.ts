@@ -92,7 +92,7 @@ const bookAppointment = async (payload: IBookAppointmentPayload, user: IRequestU
         appointmentId: appointmentData.id,
         paymentId: paymentData.id,
       },
-      success_url: `${envVars.FRONTEND_URL}/dashborad/payment/payment-success?appoinment_id=${appointmentData.id}&payment_id=${paymentData.id}`,
+      success_url: `${envVars.FRONTEND_URL}/dashboard/payment/payment-success?appoinment_id=${appointmentData.id}&payment_id=${paymentData.id}`,
       // cancel_url: `${envVars.FRONTEND_URL}/dashborad/payment/payment-failed`,
       cancel_url: `${envVars.FRONTEND_URL}/dashborad/appointments?error=payment_cancelled`,
 
@@ -135,7 +135,10 @@ const getMyAppointments = async (user: IRequestUser) => {
       include: {
         doctor: true,
         schedule: true,
-      }
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
     })
   } else if (doctorData) {
     appointments = await prisma.appointment.findMany({
@@ -145,7 +148,10 @@ const getMyAppointments = async (user: IRequestUser) => {
       include: {
         patient: true,
         schedule: true,
-      }
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
     })
   } else {
     throw new AppError(status.NOT_FOUND, "User Not Found");
@@ -235,7 +241,11 @@ const getAllAppointments = async (query: IQueryParams) => {
     Prisma.AppointmentInclude
   >(
     prisma.appointment,
-    query,
+    {
+      sortBy: "createdAt",
+      sortOrder: "desc",
+      ...query,
+    },
     {
       searchableFields: appointmentSearchableFields,
       filterableFields: appointmentFilterableFields,
@@ -376,7 +386,7 @@ const initiatePayment = async (appointmentId: string, user: IRequestUser) => {
       appointmentId: appointmentData.id,
       paymentId: appointmentData.payment?.id,
     },
-    success_url: `${envVars.FRONTEND_URL}/dashborad/payment/payment-success?appoinment_id=${appointmentData.id}&payment_id=${appointmentData.payment.id}`,
+    success_url: `${envVars.FRONTEND_URL}/dashboard/payment/payment-success?appoinment_id=${appointmentData.id}&payment_id=${appointmentData.payment.id}`,
     // cancel_url: `${envVars.FRONTEND_URL}/dashborad/payment/payment-failed`,
     cancel_url: `${envVars.FRONTEND_URL}/dashborad/appointments?error=payment_cancelled`,
 

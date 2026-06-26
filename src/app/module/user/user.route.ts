@@ -4,6 +4,7 @@ import { validateRequest } from "../../middleware/validateRequest";
 import { userValidation } from "./user.validation";
 import { checkAuth } from "../../middleware/checkAuth";
 import { Role } from "../../../generated/prisma/enums";
+import { multerUpload } from "../../config/multer.config";
 
 const router = Router();
 
@@ -13,5 +14,13 @@ router.post("/create-Admin", checkAuth(Role.ADMIN, Role.SUPER_ADMIN), validateRe
 
 router.post("/create-superAdmin", checkAuth(Role.SUPER_ADMIN), validateRequest(userValidation.createSuperAdminZodSchema), UserController.createSuperAdmin);
 
+router.post(
+  "/upload-image",
+  checkAuth(Role.ADMIN, Role.SUPER_ADMIN, Role.DOCTOR, Role.PATIENT),
+  multerUpload.single("file"),
+  UserController.uploadImage
+);
+
 export const UserRoute = router;
+
 

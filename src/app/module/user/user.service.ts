@@ -4,6 +4,7 @@ import AppError from "../../errorHelpers/AppError";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
 import { ICreateAdminPayload, ICreateDoctorPayload, ICreateSuperAdminPayload } from "./user.interface";
+import { v7 as uuidv7 } from "uuid";
 
 const createDoctor = async (payload: ICreateDoctorPayload) => {
 
@@ -31,6 +32,16 @@ const createDoctor = async (payload: ICreateDoctorPayload) => {
     throw new AppError(status.CONFLICT, "User already exist");
   }
 
+  //* Check Doctor Exist by registrationNumber or not
+  const doctorExist = await prisma.doctor.findUnique({
+    where: {
+      registrationNumber: payload.doctor.registrationNumber,
+    }
+  })
+  if (doctorExist) {
+    throw new AppError(status.CONFLICT, "Doctor with this registration number already exists");
+  }
+
   //* Create User
   const userData = await auth.api.signUpEmail({
     body: {
@@ -53,6 +64,7 @@ const createDoctor = async (payload: ICreateDoctorPayload) => {
 
       const doctorSpecialityData = specialties.map((specialty) => {
         return {
+          id: uuidv7(),
           doctorId: doctorData.id,
           specialtyId: specialty.id,
         }

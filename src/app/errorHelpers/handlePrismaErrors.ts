@@ -201,9 +201,7 @@ export const handlePrismaClientValidationError = (error: Prisma.PrismaClientVali
 export const handlerPrismaClientInitializationError = (error: Prisma.PrismaClientInitializationError): TErrorResponse => {
   const statusCode = error.errorCode ? getStatusCodeFromPrismaError(error.errorCode) : status.SERVICE_UNAVAILABLE
 
-  const cleanMessage = error.message;
-
-  cleanMessage.replace(/Invalid `.*?` invocation:?\s*/i, "")
+  const cleanMessage = error.message.replace(/Invalid `.*?` invocation:?\s*/i, "");
 
   const lines = cleanMessage.split("\n").filter(line => line.trim());
 

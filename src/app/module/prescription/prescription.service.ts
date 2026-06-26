@@ -154,7 +154,10 @@ const myPrescriptions = async (user: IRequestUser) => {
         patient: true,
         doctor: true,
         appointment: true,
-      }
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
     return prescription;
   }
@@ -169,7 +172,10 @@ const myPrescriptions = async (user: IRequestUser) => {
         patient: true,
         doctor: true,
         appointment: true,
-      }
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
     return prescription;
   }
@@ -182,7 +188,11 @@ const getAllPrescriptions = async (query: IQueryParams) => {
     Prisma.PrescriptionInclude
   >(
     prisma.prescription,
-    query,
+    {
+      sortBy: "createdAt",
+      sortOrder: "desc",
+      ...query,
+    },
     {
       searchableFields: prescriptionSearchableFields,
       filterableFields: prescriptionFilterableFields,

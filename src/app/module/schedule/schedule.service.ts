@@ -71,7 +71,11 @@ const createSchedule = async (payload: ICreateSchedulePayload) => {
 const getAllSchedules = async (query: IQueryParams) => {
   const queryBuilder = new QueryBuilder<Schedule, Prisma.ScheduleWhereInput, Prisma.ScheduleInclude>(
     prisma.schedule,
-    query,
+    {
+      sortBy: "startDateTime",
+      sortOrder: "desc",
+      ...query,
+    },
     {
       searchableFields: scheduleSearchableFields,
       filterableFields: scheduleFilterableFields
@@ -144,10 +148,44 @@ const deleteSchedule = async (id: string) => {
   return true;
 }
 
+const cleanupPastSchedules = async () => {
+  const now = new Date();
+
+  // 1. Delete unbooked doctor schedules that are in the past
+  const deletedDoctorSchedules = await prisma.doctorSchedules.deleteMany({
+    where: {
+      isBooked: false,
+      schedule: {
+        startDateTime: {
+          lt: now,
+        },
+      },
+    },
+  });
+
+  // 2. Delete past admin schedules that are not associated with any appointments
+  const deletedSchedules = await prisma.schedule.deleteMany({
+    where: {
+      startDateTime: {
+        lt: now,
+      },
+      appointments: {
+        none: {},
+      },
+    },
+  });
+
+  return {
+    deletedDoctorSchedulesCount: deletedDoctorSchedules.count,
+    deletedSchedulesCount: deletedSchedules.count,
+  };
+};
+
 export const ScheduleService = {
   createSchedule,
   getAllSchedules,
   getScheduleById,
   updateSchedule,
   deleteSchedule,
+  cleanupPastSchedules,
 }

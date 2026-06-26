@@ -11,7 +11,7 @@ const getAllAdmins = catchAsync(
     sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
-      message: "All Admins Data Retrived",
+      message: "All Admins Data Retrieved",
       data: result
     })
   }
@@ -23,7 +23,7 @@ const getAdminById = catchAsync(
     sendResponse(res, {
       httpStatusCode: status.OK,
       success: true,
-      message: "Admin Data Retrived",
+      message: "Admin Data Retrieved",
       data: result
     })
   }

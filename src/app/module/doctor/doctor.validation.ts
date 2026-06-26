@@ -4,7 +4,7 @@ export const updateDoctorZodSchema = z.object({
   doctor: z.object({
     name: z.string("Name must be string").min(5, "Name must be at least 5 characters").max(30, "Name must be at most 30 characters").optional(),
     profilePhoto: z.url("Profile photo must be a valid URL").optional(),
-    contactNumber: z.string("Contact number must be string").min(11, "Contact number must be at least 11 characters").max(14, "Contact number must be at most 15 characters").optional(),
+    contactNumber: z.string("Contact number must be string").length(10, "Contact number must be exactly 10 digits").regex(/^[6-9]\d{9}$/, "Contact number must be a valid Indian mobile number").optional(),
     address: z.string("Address must be string").min(10, "Address must be at least 10 characters").max(100, "Address must be at most 100 characters").optional(),
     registrationNumber: z.string("Registration number must be string").optional(),
     experience: z.int("Experience must be an integer").nonnegative("Experience cannot be negative").optional(),

@@ -133,7 +133,11 @@ const updateMyProfile = async (user: IRequestUser, payload: IUpdatePatientProfil
 const getAllPatients = async (query: IQueryParams) => {
   const queryBuilder = new QueryBuilder<Patient, Prisma.PatientWhereInput, Prisma.PatientInclude>(
     prisma.patient,
-    query,
+    {
+      sortBy: "createdAt",
+      sortOrder: "desc",
+      ...query,
+    },
     {
       searchableFields: patientSearchableFields,
       filterableFields: patientFilterableFields,

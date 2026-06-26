@@ -2,7 +2,7 @@ import status from "http-status";
 import AppError from "../../errorHelpers/AppError";
 import { IRequestUser } from "../../interfaces/requestUser.interface";
 import { prisma } from "../../lib/prisma";
-import { ICreateReviewPayload } from "./review.interface";
+import { ICreateReviewPayload, IUpdateReviewPayload } from "./review.interface";
 import { PaymentStatus, Role } from "../../../generated/prisma/enums";
 import { IQueryParams } from "../../interfaces/query.interface";
 import { QueryBuilder } from "../../utils/QueryBuilder";
@@ -80,7 +80,11 @@ const getAllReviews = async (query: IQueryParams) => {
     Prisma.ReviewInclude
   >(
     prisma.review,
-    query,
+    {
+      sortBy: "createdAt",
+      sortOrder: "desc",
+      ...query,
+    },
     {
       searchableFields: reviewSearchableFields,
       filterableFields: reviewFilterableFields,
@@ -129,38 +133,38 @@ const myReviews = async (user: IRequestUser) => {
       include: {
         patient: true,
         appointment: true,
-      }
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
     })
   };
 
   if (isUserExist.role === Role.PATIENT) {
-    const patientData = await prisma.doctor.findUniqueOrThrow({
+    const patientData = await prisma.patient.findUniqueOrThrow({
       where: {
         email: user.email,
       }
     });
     return await prisma.review.findMany({
       where: {
-        doctorId: patientData.id
+        patientId: patientData.id
       },
       include: {
         doctor: true,
         appointment: true,
-      }
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
     })
   };
 }
 
-const updateReview = async (user: IRequestUser, reviewId: string, payload: ICreateReviewPayload) => {
+const updateReview = async (user: IRequestUser, reviewId: string, payload: IUpdateReviewPayload) => {
   const patientData = await prisma.patient.findUniqueOrThrow({
     where: {
       email: user.email
-    }
-  });
-
-  const appointmentData = await prisma.appointment.findUniqueOrThrow({
-    where: {
-      id: payload.appointmentId
     }
   });
 
@@ -168,7 +172,11 @@ const updateReview = async (user: IRequestUser, reviewId: string, payload: ICrea
     where: {
       id: reviewId,
     }
-  })
+  });
+
+  if (reviewData.patientId !== patientData.id) {
+    throw new AppError(status.BAD_REQUEST, "You can only update your own reviews");
+  }
 
   const result = await prisma.$transaction(async (tx) => {
     const updatedReview = await tx.review.update({
@@ -182,7 +190,7 @@ const updateReview = async (user: IRequestUser, reviewId: string, payload: ICrea
 
     const averageRating = await tx.review.aggregate({
       where: {
-        doctorId: appointmentData.doctorId
+        doctorId: reviewData.doctorId
       },
       _avg: {
         rating: true,
@@ -191,7 +199,7 @@ const updateReview = async (user: IRequestUser, reviewId: string, payload: ICrea
 
     await tx.doctor.update({
       where: {
-        id: appointmentData.doctorId
+        id: reviewData.doctorId
       },
       data: {
         averageRating: averageRating._avg.rating as number,

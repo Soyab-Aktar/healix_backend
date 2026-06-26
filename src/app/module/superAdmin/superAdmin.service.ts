@@ -80,12 +80,30 @@ const updateSuperAdminData = async (id: string, payload: ISuperAdminUpdatePayloa
     throw new AppError(status.NOT_FOUND, "Super Admin not found");
   }
 
-  const updatedSuperAdmin = await prisma.superAdmin.update({
-    where: {
-      id: id,
-    },
-    data: payload,
+  const updatedSuperAdmin = await prisma.$transaction(async (tx) => {
+    const superAdmin = await tx.superAdmin.update({
+      where: {
+        id: id,
+      },
+      data: payload,
+    });
+
+    if (payload.name || payload.profilePhoto) {
+      const userData = {
+        name: payload.name ? payload.name : existingSuperAdmin.name,
+        image: payload.profilePhoto ? payload.profilePhoto : existingSuperAdmin.profilePhoto,
+      };
+      await tx.user.update({
+        where: {
+          id: existingSuperAdmin.userId
+        },
+        data: userData
+      });
+    }
+
+    return superAdmin;
   });
+
   return updatedSuperAdmin;
 }
 

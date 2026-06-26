@@ -12,12 +12,15 @@ import qs from "qs";
 import { PaymentController } from "./app/module/payment/payment.controller";
 import cron from "node-cron";
 import { AppointmentService } from "./app/module/appointment/appointment.service";
+import { ScheduleService } from "./app/module/schedule/schedule.service";
+import { apiLogger } from "./app/middleware/apiLogger";
 
 const app: Application = express();
 app.set("query parser", (str: string) => qs.parse(str));
 app.set("view engine", "ejs");
 app.set("views", path.resolve(process.cwd(), `src/app/templates`));
 
+app.use(apiLogger);
 app.use("/api/auth", toNodeHandler(auth));
 app.post(
   "/webhook",
@@ -44,6 +47,21 @@ cron.schedule("*/25 * * * *", async () => {
   } catch (err: any) {
     console.error(
       "Error occured while canceling unpaid appointments:",
+      err.message,
+    );
+  }
+});
+
+cron.schedule("*/30 * * * *", async () => {
+  try {
+    console.log("Running cron job to clean up past unallocated schedules...");
+    const result = await ScheduleService.cleanupPastSchedules();
+    console.log(
+      `Cleaned up past schedules: ${result.deletedSchedulesCount} admin schedules, ${result.deletedDoctorSchedulesCount} doctor schedules.`,
+    );
+  } catch (err: any) {
+    console.error(
+      "Error occurred while cleaning up past schedules:",
       err.message,
     );
   }

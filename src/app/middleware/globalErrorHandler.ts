@@ -74,8 +74,37 @@ export const globalErrorHandler = async (err: any, req: Request, res: Response, 
         message: err.message
       }
     ]
-  }
-  else if (err instanceof Error) {
+  } else if (err.name === 'JsonWebTokenError') {
+    statusCode = status.UNAUTHORIZED;
+    message = 'Invalid token';
+    errorSources = [
+      {
+        path: 'token',
+        message: err.message
+      }
+    ];
+    stack = err.stack;
+  } else if (err.name === 'TokenExpiredError') {
+    statusCode = status.UNAUTHORIZED;
+    message = 'Token has expired';
+    errorSources = [
+      {
+        path: 'token',
+        message: err.message
+      }
+    ];
+    stack = err.stack;
+  } else if (err instanceof SyntaxError && 'status' in err && (err as Record<string, unknown>).status === 400 && 'body' in err) {
+    statusCode = status.BAD_REQUEST;
+    message = 'Invalid JSON in request body';
+    errorSources = [
+      {
+        path: 'body',
+        message: err.message
+      }
+    ];
+    stack = err.stack;
+  } else if (err instanceof Error) {
     statusCode = status.INTERNAL_SERVER_ERROR;
     message = err.message
     stack = err.stack;
@@ -92,6 +121,7 @@ export const globalErrorHandler = async (err: any, req: Request, res: Response, 
     success: false,
     message: message,
     errorSources,
+    statusCode,
     error: envVars.NODE_ENV === 'development' ? err : undefined,
     stack: envVars.NODE_ENV === 'development' ? stack : undefined,
   }

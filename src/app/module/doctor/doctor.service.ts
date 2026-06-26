@@ -50,15 +50,19 @@ const getAllDoctors = async (query: IQueryParams) => {
   //   specialties: doctor.specialties.map((s) => s.specialty),
   // }));
   // return doctors;
-  const quaryBuilder = new QueryBuilder<Doctor, Prisma.DoctorWhereInput, Prisma.DoctorInclude>(
+  const queryBuilder = new QueryBuilder<Doctor, Prisma.DoctorWhereInput, Prisma.DoctorInclude>(
     prisma.doctor,
-    query,
+    {
+      sortBy: "createdAt",
+      sortOrder: "desc",
+      ...query,
+    },
     {
       searchableFields: doctorSearchableFields,
       filterableFields: doctorFilterableFields,
     }
   )
-  const result = await quaryBuilder
+  const result = await queryBuilder
     .search()
     .filter()
     .where({ isDeleted: false })
@@ -118,6 +122,7 @@ const softDeleteDoctor = async (id: string) => {
   const isDoctorExist = await prisma.doctor.findUnique({
     where: {
       id,
+      isDeleted: false,
     }
   });
 
@@ -130,7 +135,7 @@ const softDeleteDoctor = async (id: string) => {
       where: { id },
       data: {
         isDeleted: true,
-        deleteAt: new Date(),
+        deletedAt: new Date(),
       }
     });
 
@@ -165,6 +170,7 @@ const updateDoctorData = async (id: string, payload: IUpdateDoctorPayload) => {
   const isDoctorExist = await prisma.doctor.findUnique({
     where: {
       id,
+      isDeleted: false,
     }
   });
 
@@ -181,7 +187,20 @@ const updateDoctorData = async (id: string, payload: IUpdateDoctorPayload) => {
       await tx.doctor.update({
         where: { id },
         data: doctorData,
-      })
+      });
+
+      if (doctorData.name || doctorData.profilePhoto) {
+        const userData = {
+          name: doctorData.name ? doctorData.name : isDoctorExist.name,
+          image: doctorData.profilePhoto ? doctorData.profilePhoto : isDoctorExist.profilePhoto,
+        };
+        await tx.user.update({
+          where: {
+            id: isDoctorExist.userId
+          },
+          data: userData
+        });
+      }
     }
 
     // Update Specialties
@@ -189,12 +208,10 @@ const updateDoctorData = async (id: string, payload: IUpdateDoctorPayload) => {
       for (const specialty of specialties) {
         const { specialtyId, shouldDelete } = specialty;
         if (shouldDelete) {
-          await tx.doctorSpecialty.delete({
+          await tx.doctorSpecialty.deleteMany({
             where: {
-              doctorId_specialtyId: {
-                doctorId: id,
-                specialtyId,
-              }
+              doctorId: id,
+              specialtyId,
             }
           });
         } else {
