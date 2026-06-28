@@ -14,13 +14,31 @@ const createMyDoctorSchedule = async (user: IRequestUser, payload: ICreateDoctor
     }
   });
   console.log({ doctorData });
-  const doctorScheduleData = payload.scheduleIds.map((scheduleId) => ({
-    doctorId: doctorData.id,
-    scheduleId,
-  }))
-  await prisma.doctorSchedules.createMany({
-    data: doctorScheduleData
+  const existingSchedules = await prisma.doctorSchedules.findMany({
+    where: {
+      doctorId: doctorData.id,
+      scheduleId: {
+        in: payload.scheduleIds
+      }
+    },
+    select: {
+      scheduleId: true
+    }
   });
+
+  const existingScheduleIds = new Set(existingSchedules.map(s => s.scheduleId));
+  const newScheduleIds = payload.scheduleIds.filter(id => !existingScheduleIds.has(id));
+
+  if (newScheduleIds.length > 0) {
+    const doctorScheduleData = newScheduleIds.map((scheduleId) => ({
+      doctorId: doctorData.id,
+      scheduleId,
+    }));
+    await prisma.doctorSchedules.createMany({
+      data: doctorScheduleData
+    });
+  }
+
   const result = await prisma.doctorSchedules.findMany({
     where: {
       doctorId: doctorData.id,
@@ -31,10 +49,8 @@ const createMyDoctorSchedule = async (user: IRequestUser, payload: ICreateDoctor
     include: {
       schedule: true
     }
-  })
+  });
 
-
-  return result;
   return result;
 }
 
@@ -58,6 +74,12 @@ const getMyDoctorSchedules = async (user: IRequestUser, query: IQueryParams) => 
   const doctorSchedules = await queryBuilder
     .search()
     .filter()
+    .where({
+      schedule: {
+        isActive: true,
+        deletedAt: null
+      }
+    })
     .paginate()
     .include({
       schedule: true,
@@ -89,6 +111,12 @@ const getAllDoctorSchedules = async (query: IQueryParams) => {
   const result = await queryBuilder
     .search()
     .filter()
+    .where({
+      schedule: {
+        isActive: true,
+        deletedAt: null
+      }
+    })
     .paginate()
     .dynamicInclude(doctorScheduleIncludeConfig)
     .sort()
@@ -97,11 +125,13 @@ const getAllDoctorSchedules = async (query: IQueryParams) => {
   return result;
 }
 const getDoctorScheduleById = async (doctorId: string, scheduleId: string) => {
-  const doctorSchedule = await prisma.doctorSchedules.findUnique({
+  const doctorSchedule = await prisma.doctorSchedules.findFirst({
     where: {
-      doctorId_scheduleId: {
-        doctorId: doctorId,
-        scheduleId: scheduleId
+      doctorId: doctorId,
+      scheduleId: scheduleId,
+      schedule: {
+        isActive: true,
+        deletedAt: null
       }
     },
     include: {
@@ -132,17 +162,44 @@ const updateMyDoctorSchedule = async (user: IRequestUser, payload: IUpdateDoctor
       }
     });
 
-    const doctorScheduleData = createIds.map((scheduleId) => ({
-      doctorId: doctorData.id,
-      scheduleId,
-    }));
+    const existingSchedules = await tx.doctorSchedules.findMany({
+      where: {
+        doctorId: doctorData.id,
+        scheduleId: {
+          in: createIds
+        }
+      },
+      select: {
+        scheduleId: true
+      }
+    });
 
-    const result = await tx.doctorSchedules.createMany({
-      data: doctorScheduleData
-    })
+    const existingScheduleIds = new Set(existingSchedules.map(s => s.scheduleId));
+    const newCreateIds = createIds.filter(id => !existingScheduleIds.has(id));
 
-    return result;
-  })
+    if (newCreateIds.length > 0) {
+      const doctorScheduleData = newCreateIds.map((scheduleId) => ({
+        doctorId: doctorData.id,
+        scheduleId,
+      }));
+
+      await tx.doctorSchedules.createMany({
+        data: doctorScheduleData
+      });
+    }
+
+    return await tx.doctorSchedules.findMany({
+      where: {
+        doctorId: doctorData.id,
+        scheduleId: {
+          in: payload.scheduleIds.map(s => s.id)
+        }
+      },
+      include: {
+        schedule: true
+      }
+    });
+  });
 
   return result;
 

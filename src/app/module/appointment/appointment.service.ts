@@ -26,18 +26,20 @@ const bookAppointment = async (payload: IBookAppointmentPayload, user: IRequestU
     }
   });
 
-  const doctorSchedulesData = await prisma.doctorSchedules.findUniqueOrThrow({
+  const doctorSchedulesData = await prisma.doctorSchedules.findFirstOrThrow({
     where: {
-      doctorId_scheduleId: {
-        doctorId: payload.doctorId,
-        scheduleId: payload.scheduleId,
+      doctorId: payload.doctorId,
+      scheduleId: payload.scheduleId,
+      isBooked: false,
+      schedule: {
+        isActive: true,
+        deletedAt: null
       }
+    },
+    include: {
+      schedule: true
     }
   });
-
-  if (doctorSchedulesData.isBooked === true) {
-    throw new AppError(status.BAD_REQUEST, "This Doctor Schedule is already booked");
-  }
 
   const videoCallingId = String(uuidv7());
 
@@ -48,6 +50,9 @@ const bookAppointment = async (payload: IBookAppointmentPayload, user: IRequestU
         patientId: patientData.id,
         scheduleId: doctorSchedulesData.scheduleId,
         videoCallingId,
+        appointmentDate: doctorSchedulesData.schedule.startDateTime,
+        appointmentStart: doctorSchedulesData.schedule.startDateTime,
+        appointmentEnd: doctorSchedulesData.schedule.endDateTime,
       }
     });
 
@@ -283,12 +288,18 @@ const bookAppointmentWithPayLater = async (payload: IBookAppointmentPayload, use
     }
   });
 
-  const doctorSchedulesData = await prisma.doctorSchedules.findUniqueOrThrow({
+  const doctorSchedulesData = await prisma.doctorSchedules.findFirstOrThrow({
     where: {
-      doctorId_scheduleId: {
-        doctorId: payload.doctorId,
-        scheduleId: payload.scheduleId,
+      doctorId: payload.doctorId,
+      scheduleId: payload.scheduleId,
+      isBooked: false,
+      schedule: {
+        isActive: true,
+        deletedAt: null
       }
+    },
+    include: {
+      schedule: true
     }
   });
 
@@ -301,6 +312,9 @@ const bookAppointmentWithPayLater = async (payload: IBookAppointmentPayload, use
         patientId: patientData.id,
         scheduleId: doctorSchedulesData.scheduleId,
         videoCallingId,
+        appointmentDate: doctorSchedulesData.schedule.startDateTime,
+        appointmentStart: doctorSchedulesData.schedule.startDateTime,
+        appointmentEnd: doctorSchedulesData.schedule.endDateTime,
       }
     });
 
@@ -434,17 +448,19 @@ const cancelUnpaidAppointments = async () => {
     });
 
     for (const unpaidAppointment of unpaidAppointments) {
-      await tx.doctorSchedules.update({
-        where: {
-          doctorId_scheduleId: {
-            doctorId: unpaidAppointment.doctorId,
-            scheduleId: unpaidAppointment.scheduleId
+      if (unpaidAppointment.scheduleId) {
+        await tx.doctorSchedules.update({
+          where: {
+            doctorId_scheduleId: {
+              doctorId: unpaidAppointment.doctorId,
+              scheduleId: unpaidAppointment.scheduleId
+            }
+          },
+          data: {
+            isBooked: false,
           }
-        },
-        data: {
-          isBooked: false,
-        }
-      })
+        });
+      }
     }
 
 

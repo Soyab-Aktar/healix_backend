@@ -73,6 +73,21 @@ const getAllDoctors = async (query: IQueryParams) => {
           specialty: true
         }
       },
+      doctorSchedules: {
+        where: {
+          isBooked: false,
+          schedule: {
+            isActive: true,
+            deletedAt: null,
+            startDateTime: {
+              gt: new Date()
+            }
+          }
+        },
+        select: {
+          scheduleId: true
+        }
+      }
     })
     .dynamicInclude(doctorIncludeConfig)
     .paginate()
@@ -98,6 +113,13 @@ const getDoctorsById = async (id: string) => {
         }
       },
       doctorSchedules: {
+        where: {
+          isBooked: false,
+          schedule: {
+            isActive: true,
+            deletedAt: null
+          }
+        },
         include: {
           schedule: true
         }

@@ -19,6 +19,13 @@ export const doctorIncludeConfig: Partial<Record<keyof Prisma.DoctorInclude, Pri
     }
   },
   doctorSchedules: {
+    where: {
+      isBooked: false,
+      schedule: {
+        isActive: true,
+        deletedAt: null
+      }
+    },
     include: {
       schedule: true
     }

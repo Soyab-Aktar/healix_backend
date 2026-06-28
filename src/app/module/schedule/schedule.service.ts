@@ -50,7 +50,9 @@ const createSchedule = async (payload: ICreateSchedulePayload) => {
       const existingSchedule = await prisma.schedule.findFirst({
         where: {
           startDateTime: scheduleData.startDateTime,
-          endDateTime: scheduleData.endDateTime
+          endDateTime: scheduleData.endDateTime,
+          isActive: true,
+          deletedAt: null
         }
       })
 
@@ -85,6 +87,7 @@ const getAllSchedules = async (query: IQueryParams) => {
   const result = await queryBuilder
     .search()
     .filter()
+    .where({ isActive: true, deletedAt: null })
     .paginate()
     .dynamicInclude(scheduleIncludeConfig)
     .sort()
@@ -95,9 +98,11 @@ const getAllSchedules = async (query: IQueryParams) => {
 }
 
 const getScheduleById = async (id: string) => {
-  const schedule = await prisma.schedule.findUnique({
+  const schedule = await prisma.schedule.findFirst({
     where: {
-      id: id
+      id: id,
+      isActive: true,
+      deletedAt: null
     }
   });
 
@@ -140,9 +145,13 @@ const updateSchedule = async (id: string, payload: IUpdateSchedulePayload) => {
 }
 
 const deleteSchedule = async (id: string) => {
-  await prisma.schedule.delete({
+  await prisma.schedule.update({
     where: {
       id: id
+    },
+    data: {
+      isActive: false,
+      deletedAt: new Date()
     }
   });
   return true;
@@ -151,23 +160,28 @@ const deleteSchedule = async (id: string) => {
 const cleanupPastSchedules = async () => {
   const now = new Date();
 
-  // 1. Delete unbooked doctor schedules that are in the past
-  const deletedDoctorSchedules = await prisma.doctorSchedules.deleteMany({
+  // 1. Soft-delete past active schedules where endDateTime < now and deletedAt = null
+  const softDeletedSchedules = await prisma.schedule.updateMany({
     where: {
-      isBooked: false,
-      schedule: {
-        startDateTime: {
-          lt: now,
-        },
+      endDateTime: {
+        lt: now,
       },
+      deletedAt: null,
+    },
+    data: {
+      isActive: false,
+      deletedAt: now,
     },
   });
 
-  // 2. Delete past admin schedules that are not associated with any appointments
-  const deletedSchedules = await prisma.schedule.deleteMany({
+  // 2. Hard-delete schedules older than 90 days that have zero linked appointments
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+  const hardDeletedSchedules = await prisma.schedule.deleteMany({
     where: {
-      startDateTime: {
-        lt: now,
+      endDateTime: {
+        lt: ninetyDaysAgo,
       },
       appointments: {
         none: {},
@@ -176,8 +190,8 @@ const cleanupPastSchedules = async () => {
   });
 
   return {
-    deletedDoctorSchedulesCount: deletedDoctorSchedules.count,
-    deletedSchedulesCount: deletedSchedules.count,
+    softDeletedCount: softDeletedSchedules.count,
+    hardDeletedCount: hardDeletedSchedules.count,
   };
 };
 

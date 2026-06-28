@@ -12,8 +12,12 @@ model Appointment {
     doctorId String
     doctor   Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 
-    scheduleId String
-    schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+    scheduleId String?
+    schedule   Schedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+
+    appointmentDate DateTime?
+    appointmentStart DateTime?
+    appointmentEnd DateTime?
 
     prescription Prescription?
     review       Review?

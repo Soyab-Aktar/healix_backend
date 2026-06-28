@@ -76,7 +76,7 @@ const handlerStripeWebhookEvent = async (event: Stripe.Event) => {
               patientName: appointment.patient.name,
               patientEmail: appointment.patient.email,
               doctorName: appointment.doctor.name,
-              appointmentDate: appointment.schedule.startDateTime.toString(),
+              appointmentDate: (appointment.appointmentStart || appointment.schedule?.startDateTime || "").toString(),
               amount: appointment.payment?.amount || 0,
               transactionId: appointment.payment?.transactionId || "",
               paymentDate: new Date().toISOString()
@@ -125,7 +125,11 @@ const handlerStripeWebhookEvent = async (event: Stripe.Event) => {
               transactionId: appointment.payment?.transactionId || "",
               paymentDate: new Date().toLocaleDateString(),
               doctorName: appointment.doctor.name,
-              appointmentDate: new Date(appointment.schedule.startDateTime).toLocaleDateString(),
+              appointmentDate: appointment.appointmentStart
+                ? new Date(appointment.appointmentStart).toLocaleDateString()
+                : appointment.schedule
+                ? new Date(appointment.schedule.startDateTime).toLocaleDateString()
+                : "",
               amount: appointment.payment?.amount || 0,
               invoiceUrl: result.invoiceUrl
             },

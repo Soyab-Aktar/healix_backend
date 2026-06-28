@@ -57,7 +57,7 @@ cron.schedule("*/30 * * * *", async () => {
     console.log("Running cron job to clean up past unallocated schedules...");
     const result = await ScheduleService.cleanupPastSchedules();
     console.log(
-      `Cleaned up past schedules: ${result.deletedSchedulesCount} admin schedules, ${result.deletedDoctorSchedulesCount} doctor schedules.`,
+      `Cleaned up past schedules: soft-deleted ${result.softDeletedCount} schedules, hard-deleted ${result.hardDeletedCount} old schedules.`,
     );
   } catch (err: any) {
     console.error(
